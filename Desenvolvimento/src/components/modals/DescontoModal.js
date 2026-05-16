@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import FormModal from './templates/FormModal';
 import { formatarMoeda } from '../../infrastructure/formatters';
 
-function DescontoModal({ isOpen, onClose, onApply, totais = { totalServicos: 0, totalMateriais: 0, subtotal: 0, totalRecebido: 0 } }) {
+function DescontoModal({ isOpen, onClose, onApply, onRemove, totais = { totalServicos: 0, totalMateriais: 0, subtotal: 0, totalRecebido: 0 } }) {
   const [preset, setPreset] = useState(null); // 5 | 10 | 'outro'
   const [porcentagemCustom, setPorcentagemCustom] = useState('');
   const [reaisValue, setReaisValue] = useState('');
@@ -41,9 +41,19 @@ function DescontoModal({ isOpen, onClose, onApply, totais = { totalServicos: 0, 
     onClose();
   };
 
+  const handleRemove = () => {
+    if (onRemove) {
+      onRemove();
+      onClose();
+    }
+  };
+
   const footerButtons = (
     <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
       <button onClick={onClose} style={{ flex: 1, padding: '14px', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Cancelar</button>
+      {onRemove && (
+        <button onClick={handleRemove} style={{ flex: 1, padding: '14px', background: '#dc3545', border: 'none', borderRadius: '8px', color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Remover</button>
+      )}
       <button onClick={handleApply} style={{ flex: 1, padding: '14px', background: descontoCalculado > 0 ? 'var(--accent)' : 'var(--bg3)', border: 'none', borderRadius: '8px', color: descontoCalculado > 0 ? 'white' : 'var(--text-secondary)', fontSize: '14px', fontWeight: '600', cursor: descontoCalculado > 0 ? 'pointer' : 'not-allowed' }}>{descontoCalculado > 0 ? `Aplicar ${formatarMoeda(descontoCalculado)}` : 'Aplicar'}</button>
     </div>
   );

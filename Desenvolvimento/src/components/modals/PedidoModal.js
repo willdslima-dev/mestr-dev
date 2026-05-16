@@ -1417,25 +1417,48 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                       </div>
                     </div>
                   </div>
-                  <button
-                    style={{
-                      marginTop: '26px',
-                      width: '40px',
-                      height: '40px',
-                      background: 'var(--accent)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      color: '#fff',
-                      fontSize: '20px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    onClick={() => setModalDesconto({ isOpen: true })}
-                  >
-                    +
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginTop: '26px' }}>
+                    <button
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        background: 'var(--accent)',
+                        border: 'none',
+                        borderRadius: '50%',
+                        color: '#fff',
+                        fontSize: '20px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      onClick={() => setModalDesconto({ isOpen: true })}
+                    >
+                      +
+                    </button>
+                    {formData.desconto && formData.desconto > 0 && (
+                      <button
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          background: '#dc3545',
+                          border: 'none',
+                          borderRadius: '50%',
+                          color: '#fff',
+                          fontSize: '20px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onClick={() => updateFormData('desconto', '')}
+                        title="Remover desconto"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Taxa de entrega */}
@@ -2000,6 +2023,7 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
         isOpen={modalDesconto.isOpen}
         onClose={() => setModalDesconto({ isOpen: false })}
         onApply={(valor) => { updateFormData('desconto', valor); setModalDesconto({ isOpen: false }); }}
+        onRemove={() => { updateFormData('desconto', ''); setModalDesconto({ isOpen: false }); }}
         totais={totais}
       />
 
