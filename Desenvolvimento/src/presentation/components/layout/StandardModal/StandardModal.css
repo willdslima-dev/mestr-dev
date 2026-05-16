@@ -1,0 +1,271 @@
+/* StandardModal - Modal padronizado com header fixo, body scroll, footer fixo */
+
+/* Overlay */
+.standard-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Container */
+.standard-modal {
+  background: #1a1a2e;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  animation: slideUp 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tamanhos */
+.standard-modal--small {
+  width: 100%;
+  max-width: 400px;
+}
+
+.standard-modal--medium {
+  width: 100%;
+  max-width: 600px;
+}
+
+.standard-modal--large {
+  width: 100%;
+  max-width: 800px;
+}
+
+.standard-modal--xlarge {
+  width: 100%;
+  max-width: 1200px;
+}
+
+.standard-modal--fullscreen {
+  width: 95vw;
+  max-height: 95vh;
+}
+
+/* ============================================
+   HEADER FIXO (não rola)
+   ============================================ */
+.standard-modal__header {
+  flex-shrink: 0; /* Não encolhe */
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.standard-modal__header-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.standard-modal__title-group {
+  flex: 1;
+}
+
+.standard-modal__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  line-height: 1.3;
+}
+
+.standard-modal__subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.standard-modal__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.standard-modal__header-action {
+  display: flex;
+  align-items: center;
+}
+
+.standard-modal__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.25rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.standard-modal__close:hover {
+  background: rgba(220, 53, 69, 0.2);
+  color: #dc3545;
+  transform: rotate(90deg);
+}
+
+/* ============================================
+   BODY COM SCROLL (rola)
+   ============================================ */
+.standard-modal__body {
+  flex: 1; /* Cresce para preencher espaço disponível */
+  overflow-y: auto; /* SCROLL AQUI! */
+  overflow-x: hidden;
+  padding: 2rem;
+  
+  /* Custom scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* Scrollbar para Webkit (Chrome, Safari) */
+.standard-modal__body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.standard-modal__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.standard-modal__body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.standard-modal__body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.standard-modal__body-content {
+  /* Conteúdo interno */
+}
+
+/* ============================================
+   FOOTER FIXO (não rola)
+   ============================================ */
+.standard-modal__footer {
+  flex-shrink: 0; /* Não encolhe */
+  padding: 1.5rem 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.standard-modal__footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.standard-modal__footer-custom {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.standard-modal__footer-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+/* ============================================
+   RESPONSIVO
+   ============================================ */
+@media (max-width: 768px) {
+  .standard-modal-overlay {
+    padding: 0;
+  }
+  
+  .standard-modal {
+    width: 100%;
+    height: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .standard-modal__header {
+    padding: 1rem 1.5rem;
+  }
+  
+  .standard-modal__body {
+    padding: 1.5rem;
+  }
+  
+  .standard-modal__footer {
+    padding: 1rem 1.5rem;
+  }
+  
+  .standard-modal__footer-actions {
+    flex-direction: column-reverse;
+  }
+  
+  .standard-modal__footer-main {
+    width: 100%;
+    margin-left: 0;
+  }
+  
+  .standard-modal__footer-main .btn {
+    flex: 1;
+  }
+}
+
+/* ============================================
+   ESTADOS
+   ============================================ */
+.standard-modal__body--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.standard-modal__body--empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}

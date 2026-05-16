@@ -1,0 +1,38 @@
+.form-select-wrapper {
+  margin-bottom: 16px;
+}
+
+.form-select-wrapper:last-child {
+  margin-bottom: 0;
+}
+
+.form-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  transition: all 0.2s;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+}
+
+.form-select option {
+  background: var(--bg2);
+  color: var(--text-primary);
+  padding: 10px;
+}
+
+/* Fix para texto invisível em selects */
+.form-select option:checked {
+  background: var(--accent);
+  color: white;
+}

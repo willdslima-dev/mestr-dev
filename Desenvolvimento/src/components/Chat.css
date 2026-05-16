@@ -1,0 +1,151 @@
+.chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scroll-behavior: smooth;
+}
+
+/* Mobile: reduzir padding */
+@media (max-width: 480px) {
+  .chat {
+    padding: 12px 8px;
+    gap: 8px;
+  }
+}
+
+.chat::-webkit-scrollbar {
+  width: 3px;
+}
+
+.chat::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.msg {
+  display: flex;
+  gap: 8px;
+  animation: fadeUp 0.25s ease;
+}
+
+@media (max-width: 480px) {
+  .msg {
+    gap: 6px;
+  }
+}
+
+.msg.user {
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+}
+
+/* Mobile: avatar menor */
+@media (max-width: 480px) {
+  .avatar {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+}
+
+.msg.user .avatar {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.msg-body {
+  max-width: 88%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* Mobile: aumentar largura máxima da mensagem */
+@media (max-width: 480px) {
+  .msg-body {
+    max-width: 85%;
+  }
+}
+
+.msg.user .msg-body {
+  align-items: flex-end;
+}
+
+.bubble {
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+/* Mobile: fonte menor e padding reduzido */
+@media (max-width: 480px) {
+  .bubble {
+    padding: 8px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+.msg.user .bubble {
+  background: var(--accent);
+  border-bottom-right-radius: 4px;
+}
+
+.msg.bot .bubble {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.msg-time {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+/* Mobile: fonte do timestamp menor */
+@media (max-width: 480px) {
+  .msg-time {
+    font-size: 10px;
+  }
+}
+
+.typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--muted);
+  border-radius: 50%;
+  animation: blink 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}

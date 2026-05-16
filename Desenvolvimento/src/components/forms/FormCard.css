@@ -1,0 +1,19 @@
+.form-card {
+  background: var(--bg3);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.form-card:last-child {
+  margin-bottom: 0;
+}
+
+.form-card label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}

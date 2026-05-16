@@ -1,0 +1,341 @@
+.selecionar-servico-modal {
+  padding: 0;
+}
+
+/* Abas */
+.abas-servico {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.aba-btn {
+  flex: 1;
+  padding: 1rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.aba-btn i {
+  font-size: 1rem;
+}
+
+.aba-btn.ativa {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.aba-btn:hover {
+  background: var(--bg2);
+}
+
+/* Aba Catálogo */
+.aba-catalogo {
+  padding: 0 0.5rem;
+}
+
+.busca-catalogo {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.busca-catalogo i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.busca-catalogo input {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--bg2);
+  color: var(--text);
+}
+
+.busca-catalogo input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.lista-servicos-catalogo {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.item-servico-catalogo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.item-servico-catalogo:hover {
+  background: var(--bg3);
+  border-color: var(--accent);
+}
+
+.info-servico {
+  flex: 1;
+  padding-right: 1rem;
+}
+
+.nome-servico {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+}
+
+.detalhes-servico {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+  font-style: italic;
+}
+
+.preco-servico {
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.preco-servico strong {
+  font-weight: 700;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.btn-adicionar-catalogo {
+  width: 100%;
+  padding: 1rem;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-adicionar-catalogo:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Aba Cadastrar */
+.aba-cadastrar {
+  padding: 0 0.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--bg2);
+  color: var(--text);
+  transition: border-color 0.2s;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.form-group select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='gray' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1.2rem;
+  padding-right: 2.5rem;
+}
+
+.form-group select option {
+  background: var(--bg2);
+  color: var(--text);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .form-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.input-com-botoes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-com-botoes input {
+  flex: 1;
+  text-align: center;
+  padding: 0.875rem 0.5rem;
+}
+
+.btn-menos,
+.btn-mais {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-menos:hover,
+.btn-mais:hover {
+  background: var(--bg3);
+  border-color: var(--accent);
+}
+
+.btn-mais {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.btn-mais:hover {
+  opacity: 0.9;
+}
+
+.valor-total-cadastro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: var(--bg3);
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.valor-total-cadastro span {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.valor-total-cadastro strong {
+  font-size: 18px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.salvar-catalogo-checkbox {
+  margin-bottom: 1.5rem;
+}
+
+.salvar-catalogo-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.salvar-catalogo-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.salvar-catalogo-checkbox span {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.btn-adicionar-servico {
+  width: 100%;
+  padding: 1rem;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: lowercase;
+}
+
+.btn-adicionar-servico:hover {
+  background: var(--bg2);
+  border-color: var(--accent);
+}
+
+.btn-adicionar-servico:active {
+  transform: scale(0.98);
+}

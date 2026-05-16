@@ -1,0 +1,71 @@
+.form-input-wrapper {
+  margin-bottom: 16px;
+}
+
+/* Mobile: espaçamento menor */
+@media (max-width: 480px) {
+  .form-input-wrapper {
+    margin-bottom: 12px;
+  }
+}
+
+.form-input-wrapper:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+/* Mobile: label menor */
+@media (max-width: 480px) {
+  .form-label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+}
+
+.form-label .required {
+  color: #f06070;
+  margin-left: 2px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+/* Mobile: input menor */
+@media (max-width: 480px) {
+  .form-input {
+    padding: 9px 10px;
+    font-size: 13px;
+  }
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+}
+
+.form-input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+.form-input[type="date"],
+.form-input[type="time"] {
+  color-scheme: dark;
+}

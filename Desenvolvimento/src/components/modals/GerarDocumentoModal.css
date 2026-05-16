@@ -1,0 +1,269 @@
+.gerar-documento-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Alerta informativo */
+.alert-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  background: rgba(108, 99, 255, 0.1);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  border-radius: 10px;
+}
+
+.alert-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.alert-text strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.alert-text p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin: 0;
+}
+
+/* Tipo de geração */
+.tipo-geracao-card {
+  background: var(--bg3);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.tipo-label {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.tipo-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tipo-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tipo-option:hover {
+  border-color: var(--accent);
+  background: var(--bg2);
+}
+
+.tipo-option input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.tipo-option span {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Seleção rápida */
+.selecao-rapida {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-selecao {
+  flex: 1;
+  padding: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-selecao:hover {
+  background: var(--bg2);
+  border-color: var(--accent);
+}
+
+/* Lista de pedidos */
+.pedidos-lista {
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pedidos-vazio {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.pedidos-vazio-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.pedidos-vazio p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Item de pedido */
+.pedido-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  background: var(--bg3);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pedido-item:hover {
+  border-color: var(--accent);
+  background: var(--bg2);
+}
+
+.pedido-item.selecionado {
+  border-color: var(--accent);
+  background: rgba(108, 99, 255, 0.05);
+}
+
+.pedido-checkbox {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 2px;
+}
+
+.pedido-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.pedido-info {
+  flex: 1;
+}
+
+.pedido-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.pedido-numero {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.pedido-data {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.pedido-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 6px;
+}
+
+.pedido-referencia {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.pedido-valor {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.pedido-valor strong {
+  color: var(--accent);
+  font-size: 15px;
+}
+
+/* Resumo de seleção */
+.selecao-resumo {
+  padding: 12px;
+  background: rgba(108, 99, 255, 0.1);
+  border-radius: 8px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.selecao-resumo strong {
+  color: var(--accent);
+  font-size: 16px;
+}
+
+/* Scrollbar customizada */
+.pedidos-lista::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pedidos-lista::-webkit-scrollbar-track {
+  background: var(--bg3);
+  border-radius: 10px;
+}
+
+.pedidos-lista::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+.pedidos-lista::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Responsivo */
+@media (max-width: 480px) {
+  .selecao-rapida {
+    flex-direction: column;
+  }
+  
+  .pedido-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

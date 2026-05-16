@@ -1,0 +1,184 @@
+.pagamento-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Card de Valor - Destaque */
+.card-valor {
+  background: linear-gradient(135deg, var(--accent) 0%, #5851ea 100%);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(108, 99, 255, 0.15);
+}
+
+.label-destaque {
+  display: block;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  opacity: 0.95;
+}
+
+.input-valor {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  background: white;
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input-valor:focus {
+  outline: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.valor-preview {
+  margin-top: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Cards de Informação */
+.card-info {
+  background: var(--bg3);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.card-info label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+/* Linha com 2 colunas */
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.form-group-inline label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* Inputs */
+.input-date,
+.input-select,
+.input-select-full,
+.input-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.input-date:focus,
+.input-select:focus,
+.input-select-full:focus,
+.input-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+}
+
+.input-textarea {
+  resize: vertical;
+  min-height: 80px;
+  max-height: 150px;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+/* Badge de Status */
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: var(--card-bg);
+  border-radius: 8px;
+  border: 2px dashed var(--border);
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot.pendente {
+  background: #f5a623;
+  box-shadow: 0 0 8px rgba(245, 166, 35, 0.4);
+}
+
+.status-dot.recebido {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.status-badge span {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Botões de Ação */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 0.875rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancelar {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-cancelar:hover {
+  background: var(--bg-tertiary);
+}
+
+.btn-salvar {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-salvar:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}

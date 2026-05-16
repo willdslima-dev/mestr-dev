@@ -1,0 +1,82 @@
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* Mobile: gap menor e margin reduzida */
+@media (max-width: 480px) {
+  .action-buttons {
+    flex-direction: column-reverse;
+    gap: 10px;
+    margin-top: 12px;
+  }
+}
+
+.btn-action {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+/* Mobile: botões em coluna e padding menor */
+@media (max-width: 480px) {
+  .btn-action {
+    width: 100%;
+    padding: 11px 18px;
+    font-size: 14px;
+  }
+}
+
+.btn-cancel {
+  background: var(--bg3);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.btn-cancel:hover {
+  background: var(--bg2);
+  transform: translateY(-1px);
+}
+
+.btn-cancel:active {
+  transform: translateY(0);
+}
+
+.btn-save {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
+}
+
+.btn-save:hover {
+  background: #5851ea;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 99, 255, 0.4);
+}
+
+.btn-save:active {
+  transform: translateY(0);
+}
+
+.btn-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 480px) {
+  .action-buttons {
+    flex-direction: column-reverse;
+  }
+  
+  .btn-action {
+    width: 100%;
+  }
+}

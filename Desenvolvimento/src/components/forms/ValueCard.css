@@ -1,0 +1,63 @@
+.value-card {
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 16px;
+}
+
+/* Variante Income (Azul) - Para pagamentos */
+.value-card-income {
+  background: linear-gradient(135deg, var(--accent) 0%, #5851ea 100%);
+}
+
+/* Variante Expense (Vermelho) - Para custos */
+.value-card-expense {
+  background: linear-gradient(135deg, #f06070 0%, #e74c5d 100%);
+}
+
+/* Variante Neutral (Cinza) - Para valores neutros */
+.value-card-neutral {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+
+.value-card-label {
+  display: block;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  opacity: 0.95;
+}
+
+.value-card-input {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2937;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: inherit;
+}
+
+.value-card-input:focus {
+  outline: none;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.value-card-input::placeholder {
+  color: #6b7280;
+  opacity: 0.7;
+}
+
+.value-card-preview {
+  margin-top: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

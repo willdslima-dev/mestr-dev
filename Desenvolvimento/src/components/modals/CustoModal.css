@@ -1,0 +1,149 @@
+.custo-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Card de Valor - Destaque Vermelho para Custo */
+.card-valor-custo {
+  background: linear-gradient(135deg, #f06070 0%, #e74c5d 100%);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(240, 96, 112, 0.2);
+}
+
+.card-valor-custo .label-destaque {
+  display: block;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  opacity: 0.95;
+}
+
+.card-valor-custo .input-valor {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  background: white;
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-valor-custo .input-valor:focus {
+  outline: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-valor-custo .valor-preview {
+  margin-top: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Cards de Informação */
+.card-info {
+  background: var(--bg3);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.card-info label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+/* Inputs */
+.input-text,
+.input-date,
+.input-select,
+.input-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.input-text:focus,
+.input-date:focus,
+.input-select:focus,
+.input-textarea:focus {
+  outline: none;
+  border-color: #f06070;
+  box-shadow: 0 0 0 3px rgba(240, 96, 112, 0.1);
+}
+
+.input-textarea {
+  resize: vertical;
+  min-height: 80px;
+  max-height: 150px;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+/* Linha com 2 colunas */
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-group-inline label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* Botões de Ação */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 0.875rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancelar {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-cancelar:hover {
+  background: var(--bg-tertiary);
+}
+
+.btn-salvar {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-salvar:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}

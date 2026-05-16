@@ -1,0 +1,114 @@
+.selecionar-cliente-modal {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  height: 85vh;
+  max-height: none;
+}
+
+/* Área de conteúdo com scroll */
+.selecionar-cliente-modal .area-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+/* Scrollbar customizada */
+.selecionar-cliente-modal .area-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.selecionar-cliente-modal .area-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.selecionar-cliente-modal .area-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.selecionar-cliente-modal .area-scroll:hover::-webkit-scrollbar-thumb {
+  opacity: 1;
+}
+
+.selecionar-cliente-modal .area-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* Clientes recentes - fixos no topo */
+.clientes-recentes {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* Botões fixos no rodapé */
+.botoes-fixos-rodape {
+  flex-shrink: 0;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* Card de cliente com botões de ação */
+.card-cliente {
+  position: relative;
+  padding: 14px;
+  padding-right: 90px; /* Espaço para os botões */
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.card-cliente:hover {
+  background: var(--bg3);
+  border-color: var(--accent);
+  transform: translateX(2px);
+}
+
+.card-cliente-acoes {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  z-index: 1;
+}
+
+.btn-acao-cliente {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-editar {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-editar:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+.btn-excluir {
+  background: #f06070;
+  color: white;
+}
+
+.btn-excluir:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}

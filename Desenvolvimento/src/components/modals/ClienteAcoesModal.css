@@ -1,0 +1,440 @@
+/* Container principal */
+.cliente-acoes-modal {
+  display: flex;
+  flex-direction: column;
+  height: 85vh;
+  max-height: none;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* Esconde o header padrão do Modal */
+.cliente-acoes-modal + .modal-header {
+  display: none;
+}
+
+/* Header customizado com nome e infos do cliente */
+.modal-header-customizado {
+  position: relative;
+  padding: 20px;
+  padding-top: 50px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  flex-shrink: 0;
+  text-align: center;
+}
+
+/* Botão X dentro do header customizado */
+.btn-fechar-inline {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 28px;
+  font-weight: 300;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.btn-fechar-inline:hover {
+  background: var(--bg3);
+  color: var(--text);
+}
+
+.cliente-nome {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cliente-infos {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.info-linha {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.info-icone-mini {
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.info-texto-mini {
+  color: var(--text);
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.btn-whatsapp-mini {
+  background: #25D366;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.btn-whatsapp-mini:hover {
+  background: #20BA5A;
+  transform: scale(1.1);
+}
+
+.btn-whatsapp-mini svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Área com scroll */
+.cliente-acoes-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.cliente-acoes-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cliente-acoes-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cliente-acoes-scroll::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.cliente-acoes-scroll:hover::-webkit-scrollbar-thumb {
+  opacity: 1;
+}
+
+/* Seções expansíveis */
+.secao-expandivel {
+  margin-bottom: 16px;
+  background: var(--bg2);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.secao-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  user-select: none;
+}
+
+.secao-header:hover {
+  background: var(--bg3);
+}
+
+.secao-icone {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.secao-titulo {
+  flex: 1;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.secao-toggle {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: transform 0.3s ease;
+  pointer-events: none; /* Não interfere com o click do header */
+}
+
+.secao-toggle.aberta {
+  transform: rotate(0deg);
+}
+
+.secao-toggle:not(.aberta) {
+  transform: rotate(180deg);
+}
+
+.status-seta {
+  color: var(--muted);
+  font-size: 24px;
+  font-weight: 300;
+}
+
+/* Conteúdo das seções */
+.secao-conteudo {
+  padding: 0 16px 16px 16px;
+}
+
+/* Lista de status */
+.lista-status {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.item-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.item-status:hover {
+  background: var(--bg3);
+}
+
+.status-icone {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.status-label {
+  flex: 1;
+  font-size: 15px;
+  color: var(--text);
+}
+
+/* Grid de atalhos */
+.atalhos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.atalho-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.atalho-card:hover {
+  background: var(--bg3);
+  border-color: var(--accent);
+}
+
+.atalho-icone {
+  font-size: 32px;
+}
+
+.atalho-label {
+  font-size: 12px;
+  text-align: center;
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Botão fixo no rodapé */
+.cliente-acoes-rodape {
+  flex-shrink: 0;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.btn-acao-principal {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-acao-principal:hover {
+  background: var(--accent2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-acao-principal span {
+  font-size: 18px;
+}
+
+/* Header da lista de pagamentos */
+.lista-pagamentos-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.btn-voltar {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 32px;
+  cursor: pointer;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.btn-voltar:hover {
+  background: var(--bg3);
+}
+
+.header-info {
+  flex: 1;
+}
+
+.header-titulo {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.header-subtitulo {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Lista de pagamentos */
+.lista-pagamentos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-pagamento {
+  position: relative;
+  background: var(--bg2);
+  border-radius: 12px;
+  padding: 16px;
+  padding-right: 40px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.card-pagamento:hover {
+  background: var(--bg3);
+  transform: translateX(4px);
+}
+
+.pagamento-header {
+  margin-bottom: 12px;
+}
+
+.pagamento-data {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.pagamento-valor {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.label-valor {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.valor-numero {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pagamento-seta {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 24px;
+  font-weight: 300;
+}
+
+/* Lista vazia */
+.lista-vazia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.lista-vazia p {
+  color: var(--muted);
+  font-size: 15px;
+  margin: 0;
+}
+
+/* Responsivo */
+@media (max-width: 600px) {
+  .atalhos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .cliente-acoes-modal {
+    height: 80vh;
+  }
+}

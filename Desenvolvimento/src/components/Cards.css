@@ -1,0 +1,207 @@
+/* Cards */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 320px;
+  margin: 8px 0;
+}
+
+.card-hdr {
+  padding: 11px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-hdr.purple {
+  background: linear-gradient(135deg, var(--accent), #a855f7);
+  color: white;
+}
+
+.card-hdr.green {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: white;
+}
+
+.card-hdr.dark {
+  background: var(--bg3);
+}
+
+.card-body {
+  padding: 10px 14px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  gap: 8px;
+}
+
+.row:last-child {
+  border: none;
+}
+
+.row .lbl {
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.row .val {
+  font-weight: 500;
+  text-align: right;
+}
+
+.card-total {
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  background: var(--accent3);
+  border-top: 1px solid var(--border);
+}
+
+.card-footer {
+  padding: 8px 10px;
+  display: flex;
+  gap: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-sm {
+  flex: 1;
+  padding: 8px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: 0.15s;
+  font-weight: 500;
+}
+
+.btn-sm:hover {
+  background: var(--border);
+}
+
+.btn-sm.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+  color: white;
+}
+
+/* Badges */
+.badge {
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge-green {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.badge-yellow {
+  background: var(--yellow-bg);
+  color: var(--yellow);
+}
+
+.badge-blue {
+  background: var(--accent3);
+  color: var(--accent2);
+}
+
+.badge-red {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+/* Itens de linha */
+.item-linha {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 12px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.item-linha:last-child {
+  border: none;
+}
+
+.item-nome {
+  color: var(--muted);
+  flex: 1;
+  padding-right: 8px;
+}
+
+.item-val {
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 0;
+}
+
+/* Section Label */
+.sec-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 6px 0 4px;
+}
+
+/* Alert Box */
+.alert-box {
+  background: var(--yellow-bg);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--yellow);
+  margin: 6px 0;
+}
+
+/* Badge IA */
+.ia-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-left: 4px;
+}
+
+.ia-on {
+  background: rgba(108, 99, 255, 0.2);
+  color: var(--accent2);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+}
+
+.ia-off {
+  background: var(--bg3);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
