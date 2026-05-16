@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Modal from './Modal';
 import DescontoModal from './DescontoModal';
 import SelecionarClienteModal from './SelecionarClienteModal';
@@ -162,24 +162,6 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
     setFormData(prev => ({ ...prev, [campo]: valor }));
   };
 
-  const preencherReferenciaDoCliente = useCallback((cliente) => {
-    if (!cliente || !cliente.endereco) return;
-
-    const endereco = cliente.endereco;
-    const enderecoCompleto = [
-      endereco.logradouro,
-      endereco.numero,
-      endereco.complemento,
-      endereco.bairro,
-      endereco.cidade,
-      endereco.estado
-    ].filter(Boolean).join(', ');
-
-    if (enderecoCompleto) {
-      updateFormData('referencia', enderecoCompleto);
-    }
-  }, [updateFormData]);
-
   // Handlers para Cliente
   const handleAbrirSelecionarCliente = () => {
     setShowClienteModal(true);
@@ -188,13 +170,40 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
   const handleClienteSelecionado = (cliente) => {
     setClienteSelecionado(cliente);
     setShowClienteModal(false);
-    preencherReferenciaDoCliente(cliente);
+
+    if (cliente && cliente.endereco) {
+      const endereco = cliente.endereco;
+      const enderecoCompleto = [
+        endereco.logradouro,
+        endereco.numero,
+        endereco.complemento,
+        endereco.bairro,
+        endereco.cidade,
+        endereco.estado
+      ].filter(Boolean).join(', ');
+
+      if (enderecoCompleto) {
+        updateFormData('referencia', enderecoCompleto);
+      }
+    }
   };
 
   useEffect(() => {
-    if (clienteInicial && isOpen) {
+    if (clienteInicial && isOpen && clienteInicial.endereco) {
       setClienteSelecionado(clienteInicial);
-      preencherReferenciaDoCliente(clienteInicial);
+      const endereco = clienteInicial.endereco;
+      const enderecoCompleto = [
+        endereco.logradouro,
+        endereco.numero,
+        endereco.complemento,
+        endereco.bairro,
+        endereco.cidade,
+        endereco.estado
+      ].filter(Boolean).join(', ');
+
+      if (enderecoCompleto) {
+        updateFormData('referencia', enderecoCompleto);
+      }
     }
   }, [clienteInicial, isOpen]);
 
