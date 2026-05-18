@@ -7,6 +7,9 @@ import MaterialModal from './MaterialModal';
 import PagamentoModal from './PagamentoModal';
 import CustoModal from './CustoModal';
 import CalendarioComAgenda from './CalendarioComAgenda';
+import TimePickerClock from './TimePickerClock';
+import PaymentMethodSelector from './PaymentMethodSelector';
+import StatusSelector from './StatusSelector';
 import { uid, hoje } from '../../utils/helpers';
 import { formatarMoeda } from '../../infrastructure/formatters';
 
@@ -86,37 +89,45 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
 
   useEffect(() => {
     if (isOpen) {
-      // Se tem pedido existente, carrega os dados dele
-      if (pedidoExistente) {
+      // Busca o pedido mais atualizado do ORC, não do prop
+      let pedidoParaEditar = pedidoExistente;
+      
+      if (pedidoExistente && ORC && ORC[pedidoExistente.id]) {
+        // Use o pedido do ORC se existir (versão mais atualizada)
+        pedidoParaEditar = ORC[pedidoExistente.id];
+      }
+      
+      // Se tem pedido para editar, carrega os dados dele
+      if (pedidoParaEditar) {
         setFormData({
-          numero: pedidoExistente.numero || numeroPedido,
-          status: pedidoExistente.status || 'aguardando',
-          referencia: pedidoExistente.referencia || '',
-          validadeOrcamento: pedidoExistente.validadeOrcamento || '',
-          prazoExecucao: pedidoExistente.prazoExecucao || '',
-          horarioInicio: pedidoExistente.horarioInicio || '',
-          horarioTermino: pedidoExistente.horarioTermino || '',
-          observacoes: pedidoExistente.observacoes || '',
-          servicos: pedidoExistente.servicos || [],
-          materiais: pedidoExistente.materiais || [],
-          desconto: pedidoExistente.desconto !== undefined && pedidoExistente.desconto !== null ? pedidoExistente.desconto : '',
-          taxaEntrega: pedidoExistente.taxaEntrega || 0,
-          outrasTaxas: pedidoExistente.outrasTaxas || 0,
-          condicoesPagamento: pedidoExistente.condicoesPagamento || '',
-          meiosPagamento: pedidoExistente.meiosPagamento || '',
-          garantia: pedidoExistente.garantia || '',
-          clausulasContratuais: pedidoExistente.clausulasContratuais || '',
-          informacoesAdicionais: pedidoExistente.informacoesAdicionais || '',
-          anotacoes: pedidoExistente.anotacoes || '',
-          relatorio: pedidoExistente.relatorio || '',
-          fotos: pedidoExistente.fotos || [],
-          pagamentos: pedidoExistente.pagamentos || [],
-          custos: pedidoExistente.custos || []
+          numero: pedidoParaEditar.numero || numeroPedido,
+          status: pedidoParaEditar.status || 'aguardando',
+          referencia: pedidoParaEditar.referencia || '',
+          validadeOrcamento: pedidoParaEditar.validadeOrcamento || '',
+          prazoExecucao: pedidoParaEditar.prazoExecucao || '',
+          horarioInicio: pedidoParaEditar.horarioInicio || '',
+          horarioTermino: pedidoParaEditar.horarioTermino || '',
+          observacoes: pedidoParaEditar.observacoes || '',
+          servicos: pedidoParaEditar.servicos || [],
+          materiais: pedidoParaEditar.materiais || [],
+          desconto: pedidoParaEditar.desconto !== undefined && pedidoParaEditar.desconto !== null ? pedidoParaEditar.desconto : '',
+          taxaEntrega: pedidoParaEditar.taxaEntrega || 0,
+          outrasTaxas: pedidoParaEditar.outrasTaxas || 0,
+          condicoesPagamento: pedidoParaEditar.condicoesPagamento || '',
+          meiosPagamento: pedidoParaEditar.meiosPagamento || '',
+          garantia: pedidoParaEditar.garantia || '',
+          clausulasContratuais: pedidoParaEditar.clausulasContratuais || '',
+          informacoesAdicionais: pedidoParaEditar.informacoesAdicionais || '',
+          anotacoes: pedidoParaEditar.anotacoes || '',
+          relatorio: pedidoParaEditar.relatorio || '',
+          fotos: pedidoParaEditar.fotos || [],
+          pagamentos: pedidoParaEditar.pagamentos || [],
+          custos: pedidoParaEditar.custos || []
         });
         
         // Carrega cliente do pedido existente
-        if (pedidoExistente.clienteId && CLI) {
-          const cliente = Object.values(CLI).find(c => c.id === pedidoExistente.clienteId);
+        if (pedidoParaEditar.clienteId && CLI) {
+          const cliente = Object.values(CLI).find(c => c.id === pedidoParaEditar.clienteId);
           if (cliente) {
             setClienteSelecionado(cliente);
           }
@@ -152,7 +163,7 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, numeroPedido, pedidoExistente, clienteInicial]);
+  }, [isOpen, numeroPedido, pedidoExistente, ORC, clienteInicial]);
 
   const toggleSecao = (secao) => {
     setSecoes(prev => ({ ...prev, [secao]: !prev[secao] }));
@@ -943,6 +954,13 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                 fontSize: '14px'
               }}
             />
+
+            {/* Status do Pedido */}
+            <StatusSelector
+              value={formData.status}
+              onChange={(value) => updateFormData('status', value)}
+              label="Status do Pedido"
+            />
           </div>
 
           {/* SEÇÃO: Informações Básicas (Validade, Prazo, Horários, etc) */}
@@ -1033,46 +1051,18 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                 </div>
 
                 {/* Horário de início */}
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
-                    Horário de início
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.horarioInicio}
-                    onChange={(e) => updateFormData('horarioInicio', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'var(--bg)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      color: 'var(--text)',
-                      fontSize: '14px'
-                    }}
-                  />
-                </div>
+                <TimePickerClock
+                  value={formData.horarioInicio}
+                  onChange={(value) => updateFormData('horarioInicio', value)}
+                  label="Horário de início"
+                />
 
                 {/* Horário de término */}
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
-                    Horário de término
-                  </label>
-                  <input
-                    type="time"
-                    value={formData.horarioTermino}
-                    onChange={(e) => updateFormData('horarioTermino', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'var(--bg)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      color: 'var(--text)',
-                      fontSize: '14px'
-                    }}
-                  />
-                </div>
+                <TimePickerClock
+                  value={formData.horarioTermino}
+                  onChange={(value) => updateFormData('horarioTermino', value)}
+                  label="Horário de término"
+                />
 
                 {/* Duração do serviço (calculado automaticamente) */}
                 {formData.horarioInicio && formData.horarioTermino && (
@@ -1670,21 +1660,11 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                 </div>
 
                 {/* Meios de pagamento */}
-                <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
-                  Meios de pagamento
-                </label>
-                <div style={{
-                  padding: '10px 12px',
-                  marginBottom: '12px',
-                  background: 'var(--bg)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '8px',
-                  color: 'var(--muted)',
-                  fontSize: '13px',
-                  cursor: 'pointer'
-                }}>
-                  Boleto, transferência bancária, dinheiro, cheque, cartão de créd...
-                </div>
+                <PaymentMethodSelector
+                  value={formData.meiosPagamento}
+                  onChange={(value) => updateFormData('meiosPagamento', value)}
+                  label="Meios de pagamento"
+                />
 
                 {/* Garantia */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>

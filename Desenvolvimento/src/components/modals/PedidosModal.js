@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ListModal from './templates/ListModal';
 import PedidoModal from './PedidoModal';
 import Notificacao from '../Notificacao';
@@ -19,17 +19,34 @@ function PedidosModal({ isOpen, onClose, clienteFiltro = null, ORC: ORCProp, set
   const [statusFiltrado, setStatusFiltrado] = useState(null);
   const [criandoNovoPedido, setCriandoNovoPedido] = useState(false);
   const [mensagem, setMensagem] = useState(null);
+  const [atualizacaoContador, setAtualizacaoContador] = useState(0);
 
-  // Converte ORC em array e filtra por cliente se necessário
-  const pedidos = ORC ? Object.values(ORC).filter(p => {
-    if (clienteFiltro) {
-      return p.clienteId === clienteFiltro.id;
+  // Force re-render quando ORC muda
+  useEffect(() => {
+    if (ORC) {
+      setAtualizacaoContador(prev => prev + 1);
     }
-    return true;
-  }) : [];
+  }, [ORC]);
 
-  // Agrupa pedidos por status
-  const pedidosPorStatus = {
+  // Recarrega quando modal abre
+  useEffect(() => {
+    if (isOpen) {
+      setAtualizacaoContador(prev => prev + 1);
+    }
+  }, [isOpen]);
+
+  // Converte ORC em array e filtra por cliente se necessário - MEMOIZADO
+  const pedidos = useMemo(() => {
+    if (!ORC) return [];
+    const todosPedidos = Object.values(ORC);
+    if (clienteFiltro) {
+      return todosPedidos.filter(p => p.clienteId === clienteFiltro.id);
+    }
+    return todosPedidos;
+  }, [ORC, clienteFiltro]);
+
+  // Agrupa pedidos por status - MEMOIZADO
+  const pedidosPorStatus = useMemo(() => ({
     pendente: pedidos.filter(p => p.status === 'pendente' || !p.status),
     aguardando: pedidos.filter(p => p.status === 'aguardando'),
     aprovado: pedidos.filter(p => p.status === 'aprovado'),
@@ -38,7 +55,7 @@ function PedidosModal({ isOpen, onClose, clienteFiltro = null, ORC: ORCProp, set
     concluido: pedidos.filter(p => p.status === 'concluido'),
     garantia: pedidos.filter(p => p.status === 'garantia'),
     cancelado: pedidos.filter(p => p.status === 'cancelado')
-  };
+  }), [pedidos]);
 
   // Configuração dos status
   const statusConfig = {
@@ -52,20 +69,22 @@ function PedidosModal({ isOpen, onClose, clienteFiltro = null, ORC: ORCProp, set
     cancelado: { label: 'Cancelado', cor: '#f06070', icon: '✕' }
   };
 
-  // Filtra pedidos pela busca
-  const pedidosFiltrados = pedidos.filter(p => {
-    if (statusFiltrado && p.status !== statusFiltrado) {
-      return false;
-    }
-    
-    if (busca) {
-      return p.clienteNome?.toLowerCase().includes(busca.toLowerCase()) ||
-             p.numero?.toLowerCase().includes(busca.toLowerCase()) ||
-             p.referencia?.toLowerCase().includes(busca.toLowerCase());
-    }
-    
-    return true;
-  });
+  // Filtra pedidos pela busca - MEMOIZADO
+  const pedidosFiltrados = useMemo(() => {
+    return pedidos.filter(p => {
+      if (statusFiltrado && p.status !== statusFiltrado) {
+        return false;
+      }
+      
+      if (busca) {
+        return p.clienteNome?.toLowerCase().includes(busca.toLowerCase()) ||
+               p.numero?.toLowerCase().includes(busca.toLowerCase()) ||
+               p.referencia?.toLowerCase().includes(busca.toLowerCase());
+      }
+      
+      return true;
+    });
+  }, [pedidos, statusFiltrado, busca]);
 
   const formatarValor = (valor) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
