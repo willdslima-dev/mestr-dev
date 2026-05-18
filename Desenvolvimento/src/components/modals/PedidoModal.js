@@ -47,6 +47,8 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
     condicoesPagamento: '',
     meiosPagamento: '',
     garantia: '',
+    garantiaPeriodo: '',
+    garantiaUnidade: 'meses',
     clausulasContratuais: '',
     informacoesAdicionais: '',
     anotacoes: '',
@@ -64,6 +66,21 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
     detalhes: false,
     fotos: false
   });
+
+  // Visibilidade de pickers controlados por +
+  const [showHorarioInicioPicker, setShowHorarioInicioPicker] = useState(false);
+  const [showHorarioTerminoPicker, setShowHorarioTerminoPicker] = useState(false);
+  const [showCondicoesOptions, setShowCondicoesOptions] = useState(false);
+  const [showTaxaEntregaEditor, setShowTaxaEntregaEditor] = useState(false);
+  const [showOutrasTaxasEditor, setShowOutrasTaxasEditor] = useState(false);
+  const [taxaEntregaPrev, setTaxaEntregaPrev] = useState(0);
+  const [outrasTaxasPrev, setOutrasTaxasPrev] = useState(0);
+  const [showStatusEditor, setShowStatusEditor] = useState(false);
+  const [showObservacoesEditor, setShowObservacoesEditor] = useState(false);
+  const [showGarantiaEditor, setShowGarantiaEditor] = useState(false);
+  const [garantiaPeriodoPrev, setGarantiaPeriodoPrev] = useState('');
+  const [garantiaUnidadePrev, setGarantiaUnidadePrev] = useState('meses');
+  const [showInformacoesEditor, setShowInformacoesEditor] = useState(false);
 
   // Estados dos modais
   const [modalSelecionarServico, setModalSelecionarServico] = useState(false);
@@ -99,6 +116,19 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
       
       // Se tem pedido para editar, carrega os dados dele
       if (pedidoParaEditar) {
+        // Try to parse garantia like '12 meses' into fields
+        let garantiaPeriodo = '';
+        let garantiaUnidade = 'meses';
+        if (pedidoParaEditar.garantia && typeof pedidoParaEditar.garantia === 'string') {
+          const parts = pedidoParaEditar.garantia.split(' ');
+          if (parts.length >= 2) {
+            garantiaPeriodo = parts[0];
+            garantiaUnidade = parts[1];
+          } else {
+            garantiaPeriodo = pedidoParaEditar.garantia;
+          }
+        }
+
         setFormData({
           numero: pedidoParaEditar.numero || numeroPedido,
           status: pedidoParaEditar.status || 'aguardando',
@@ -116,6 +146,8 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
           condicoesPagamento: pedidoParaEditar.condicoesPagamento || '',
           meiosPagamento: pedidoParaEditar.meiosPagamento || '',
           garantia: pedidoParaEditar.garantia || '',
+          garantiaPeriodo: pedidoParaEditar.garantiaPeriodo || garantiaPeriodo,
+          garantiaUnidade: pedidoParaEditar.garantiaUnidade || garantiaUnidade,
           clausulasContratuais: pedidoParaEditar.clausulasContratuais || '',
           informacoesAdicionais: pedidoParaEditar.informacoesAdicionais || '',
           anotacoes: pedidoParaEditar.anotacoes || '',
@@ -455,6 +487,9 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
       total: totais.total
     };
 
+    // Respeitar escolha do usuário: usar formData.status se definido, caso contrário padrão 'aguardando'
+    pedido.status = formData.status || 'aguardando';
+
     console.log('💾 Salvando pedido:', { 
       id: pedido.id, 
       numero: pedido.numero, 
@@ -466,8 +501,8 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
     setORC(novoORC);
     
     const acao = pedidoExistente ? 'atualizado' : 'salvo';
-    const statusInfo = statusOpcoes.find(s => s.valor === formData.status);
-    alert(`✅ Pedido ${formData.numero} ${acao} com sucesso!\nStatus: ${statusInfo?.label || formData.status}`);
+    const statusInfo = statusOpcoes.find(s => s.valor === pedido.status);
+    alert(`✅ Pedido ${formData.numero} ${acao} com sucesso!\nStatus: ${statusInfo?.label || pedido.status}`);
     // setStatusAlterado(false); // Comentado - variável não usada
     onClose();
   };
@@ -955,12 +990,57 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
               }}
             />
 
-            {/* Status do Pedido */}
-            <StatusSelector
-              value={formData.status}
-              onChange={(value) => updateFormData('status', value)}
-              label="Status do Pedido"
-            />
+            {/* Status do Pedido - editável somente se for pedido existente */}
+            {pedidoExistente ? (
+              <StatusSelector
+                value={formData.status}
+                onChange={(value) => updateFormData('status', value)}
+                label="Status do Pedido"
+              />
+            ) : (
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
+                  Status do Pedido
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {!showStatusEditor ? (
+                    <>
+                      <div style={{ padding: '6px 10px', background: formData.status === 'aprovado' ? '#10b981' : '#f5a623', color: '#fff', borderRadius: '10px', fontWeight: 700, fontSize: '13px' }}>
+                        {formData.status === 'aprovado' ? '✅ Aprovado' : '⏳ Aguardando aprovação'}
+                      </div>
+                      <button
+                        title="Editar status"
+                        onClick={() => setShowStatusEditor(true)}
+                        style={{
+                          width: '28px',
+                          height: '28px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRadius: '50%',
+                          border: '1px solid var(--border)',
+                          background: 'transparent',
+                          color: 'var(--text)',
+                          cursor: 'pointer',
+                          fontSize: '14px'
+                        }}
+                      >
+                        ✎
+                      </button>
+                    </>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <StatusSelector
+                        value={formData.status}
+                        onChange={(value) => { updateFormData('status', value); setShowStatusEditor(false); }}
+                        label={null}
+                      />
+                      <button onClick={() => setShowStatusEditor(false)} style={{ padding: '6px 8px', borderRadius: '6px', background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text)' }}>✕</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* SEÇÃO: Informações Básicas (Validade, Prazo, Horários, etc) */}
@@ -1002,67 +1082,115 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
 
             {secoes.informacoesDetalhadas && (
               <div style={{ paddingLeft: '8px', paddingRight: '8px' }}>
-                {/* Validade do orçamento */}
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
-                    Validade do orçamento
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.validadeOrcamento ? new Date(formData.validadeOrcamento + 'T00:00:00').toLocaleDateString('pt-BR') : ''}
+                {/* Validade do orçamento - mostrar apenas se preenchido ou editor aberto */}
+                <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
+                      Validade do orçamento
+                    </label>
+                    {(formData.validadeOrcamento || calendarioAberto === 'validade') && (
+                      <div style={{ padding: '10px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--muted)' }}>
+                        {formData.validadeOrcamento ? new Date(formData.validadeOrcamento + 'T00:00:00').toLocaleDateString('pt-BR') : 'Clique para selecionar'}
+                      </div>
+                    )}
+                  </div>
+                  <button
                     onClick={() => setCalendarioAberto('validade')}
-                    readOnly
-                    placeholder="Clique para selecionar"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'var(--bg)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      color: 'var(--text)',
-                      fontSize: '14px',
-                      cursor: 'pointer'
-                    }}
-                  />
+                    title="Selecionar validade"
+                    style={{ width: '44px', height: '44px', background: 'var(--accent)', border: 'none', borderRadius: '50%', color: '#fff', fontSize: '20px', cursor: 'pointer' }}
+                  >
+                    +
+                  </button>
                 </div>
 
-                {/* Prazo de execução */}
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
-                    Prazo de execução
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.prazoExecucao ? new Date(formData.prazoExecucao + 'T00:00:00').toLocaleDateString('pt-BR') : ''}
+                {/* Prazo de execução - mostrar apenas se preenchido ou editor aberto */}
+                <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
+                      Prazo de execução
+                    </label>
+                    {(formData.prazoExecucao || calendarioAberto === 'prazo') && (
+                      <div style={{ padding: '10px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--muted)' }}>
+                        {formData.prazoExecucao ? new Date(formData.prazoExecucao + 'T00:00:00').toLocaleDateString('pt-BR') : 'Clique para selecionar'}
+                      </div>
+                    )}
+                  </div>
+                  <button
                     onClick={() => setCalendarioAberto('prazo')}
-                    readOnly
-                    placeholder="Clique para selecionar"
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      background: 'var(--bg)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '8px',
-                      color: 'var(--text)',
-                      fontSize: '14px',
-                      cursor: 'pointer'
-                    }}
-                  />
+                    title="Selecionar prazo"
+                    style={{ width: '44px', height: '44px', background: 'var(--accent)', border: 'none', borderRadius: '50%', color: '#fff', fontSize: '20px', cursor: 'pointer' }}
+                  >
+                    +
+                  </button>
                 </div>
 
-                {/* Horário de início */}
-                <TimePickerClock
-                  value={formData.horarioInicio}
-                  onChange={(value) => updateFormData('horarioInicio', value)}
-                  label="Horário de início"
-                />
+                {/* Horário de início - renderiza só se preenchido ou picker aberto */}
+                <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
+                      Horário de início
+                    </label>
+                    {(formData.horarioInicio || showHorarioInicioPicker) && (
+                      <div>
+                        <div style={{ padding: '10px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--muted)' }}>
+                          {formData.horarioInicio || 'Selecione o horário'}
+                        </div>
+                        {showHorarioInicioPicker && (
+                          <div style={{ marginTop: '8px' }}>
+                            <TimePickerClock
+                              value={formData.horarioInicio}
+                              onChange={(value) => updateFormData('horarioInicio', value)}
+                              label={null}
+                              hideInput={true}
+                              autoOpen={true}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowHorarioInicioPicker(prev => !prev)}
+                    title="Selecionar horário de início"
+                    style={{ width: '44px', height: '44px', background: 'var(--accent)', border: 'none', borderRadius: '50%', color: '#fff', fontSize: '20px', cursor: 'pointer' }}
+                  >
+                    +
+                  </button>
+                </div>
 
-                {/* Horário de término */}
-                <TimePickerClock
-                  value={formData.horarioTermino}
-                  onChange={(value) => updateFormData('horarioTermino', value)}
-                  label="Horário de término"
-                />
+                {/* Horário de término - renderiza só se preenchido ou picker aberto */}
+                <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
+                      Horário de término
+                    </label>
+                    {(formData.horarioTermino || showHorarioTerminoPicker) && (
+                      <div>
+                        <div style={{ padding: '10px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--muted)' }}>
+                          {formData.horarioTermino || 'Selecione o horário'}
+                        </div>
+                        {showHorarioTerminoPicker && (
+                          <div style={{ marginTop: '8px' }}>
+                            <TimePickerClock
+                              value={formData.horarioTermino}
+                              onChange={(value) => updateFormData('horarioTermino', value)}
+                              label={null}
+                              hideInput={true}
+                              autoOpen={true}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowHorarioTerminoPicker(prev => !prev)}
+                    title="Selecionar horário de término"
+                    style={{ width: '44px', height: '44px', background: 'var(--accent)', border: 'none', borderRadius: '50%', color: '#fff', fontSize: '20px', cursor: 'pointer' }}
+                  >
+                    +
+                  </button>
+                </div>
 
                 {/* Duração do serviço (calculado automaticamente) */}
                 {formData.horarioInicio && formData.horarioTermino && (
@@ -1086,72 +1214,77 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                   </div>
                 )}
 
-                {/* Observações */}
-                <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
-                  Observações
-                </label>
-                <textarea
-                  value={formData.observacoes}
-                  onChange={(e) => updateFormData('observacoes', e.target.value)}
-                  placeholder="Observações gerais sobre o pedido..."
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    marginBottom: '12px',
-                    background: 'var(--bg)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                    color: 'var(--text)',
-                    fontSize: '14px',
-                    minHeight: '80px',
-                    resize: 'vertical'
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* SEÇÃO: Compromissos */}
-          <div style={{ marginBottom: '16px' }}>
-            <button
-              onClick={() => toggleSecao('compromissos')}
-              style={{
-                width: '100%',
-                padding: '12px',
-                background: 'var(--bg2)',
-                border: 'none',
-                borderRadius: '8px',
-                color: 'var(--text)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                fontSize: '15px',
-                fontWeight: '600',
-                marginBottom: secoes.compromissos ? '12px' : '0'
-              }}
-            >
-              <span>Compromissos</span>
-              <span style={{ 
-                fontSize: '18px', 
-                transition: 'transform 0.2s',
-                transform: secoes.compromissos ? 'rotate(90deg)' : 'rotate(0)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '24px',
-                height: '24px',
-                borderRadius: '50%',
-                background: 'var(--bg3)'
-              }}>
-                &gt;
-              </span>
-            </button>
-
-            {secoes.compromissos && (
-              <div style={{ paddingLeft: '8px', paddingRight: '8px' }}>
+                {/* Observações - só mostra a caixa se o usuário clicar no + */}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
+                    Observações
+                  </label>
+                  {(formData.observacoes || showObservacoesEditor) && (
+                    <textarea
+                      value={formData.observacoes}
+                      onChange={(e) => updateFormData('observacoes', e.target.value)}
+                      placeholder="Observações gerais sobre o pedido..."
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        marginBottom: '12px',
+                        background: 'var(--bg)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        color: 'var(--text)',
+                        fontSize: '14px',
+                        minHeight: '80px',
+                        resize: 'vertical'
+                      }}
+                    />
+                  )}
+                  <div style={{ marginTop: '6px' }}>
+                    {!showObservacoesEditor && (
+                      <button onClick={() => setShowObservacoesEditor(true)} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent)', color: '#fff', border: 'none', cursor: 'pointer' }}>+</button>
+                    )}
+                  </div>
+                </div>
+                {/* Garantia - abre editor com número + unidade (meses/dias) */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
+                      Garantia
+                    </label>
+                    {(formData.garantia || showGarantiaEditor) && (
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input type="number" min="0" value={formData.garantiaPeriodo || garantiaPeriodoPrev || ''} onChange={(e) => { updateFormData('garantiaPeriodo', e.target.value); }} placeholder="0" style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
+                        <select value={formData.garantiaUnidade || garantiaUnidadePrev} onChange={(e) => updateFormData('garantiaUnidade', e.target.value)} style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }}>
+                          <option value="meses">Meses</option>
+                          <option value="dias">Dias</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    {!showGarantiaEditor && (
+                      <button onClick={() => { setGarantiaPeriodoPrev(formData.garantiaPeriodo || ''); setGarantiaUnidadePrev(formData.garantiaUnidade || 'meses'); setShowGarantiaEditor(true); }} style={{ marginTop: (formData.garantia || showGarantiaEditor) ? '0' : '26px', width: '40px', height: '40px', background: 'var(--accent)', border: 'none', borderRadius: '50%', color: '#fff', fontSize: '20px', cursor: 'pointer' }}>+</button>
+                    )}
+                    {showGarantiaEditor && (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => {
+                          // Cancelar edição
+                          updateFormData('garantiaPeriodo', garantiaPeriodoPrev || '');
+                          updateFormData('garantiaUnidade', garantiaUnidadePrev || 'meses');
+                          setShowGarantiaEditor(false);
+                        }} style={{ padding: '8px 10px', borderRadius: '8px', background: '#6c757d', color: '#fff', border: 'none' }}>✕</button>
+                        <button onClick={() => {
+                          const p = formData.garantiaPeriodo || garantiaPeriodoPrev || '';
+                          const u = formData.garantiaUnidade || garantiaUnidadePrev || 'meses';
+                          updateFormData('garantia', p ? `${p} ${u}` : '');
+                          setShowGarantiaEditor(false);
+                        }} style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--accent)', color: '#fff', border: 'none' }}>✔</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 {/* Marcar visita técnica */}
                 <button
+                  onClick={() => setCalendarioAberto('validade')}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -1190,6 +1323,7 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
 
                 {/* Marcar compromisso */}
                 <button
+                  onClick={() => setCalendarioAberto('validade')}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -1470,33 +1604,39 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                   </div>
                 </div>
 
-                {/* Taxa de entrega */}
+                {/* Taxa de entrega - só mostra input se já tiver valor ou se usuário clicou + */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
                       Taxa de entrega (R$)
                     </label>
-                    <input
-                      type="number"
-                      value={formData.taxaEntrega}
-                      onChange={(e) => updateFormData('taxaEntrega', parseFloat(e.target.value) || 0)}
-                      placeholder="0,00"
-                      step="0.01"
-                      min="0"
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        background: 'var(--bg)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        color: 'var(--text)',
-                        fontSize: '14px'
-                      }}
-                    />
+                    {(formData.taxaEntrega > 0 || showTaxaEntregaEditor) && (
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          value={formData.taxaEntrega}
+                          onChange={(e) => updateFormData('taxaEntrega', parseFloat(e.target.value) || 0)}
+                          placeholder="0,00"
+                          step="0.01"
+                          min="0"
+                          style={{
+                            flex: 1,
+                            padding: '10px 12px',
+                            background: 'var(--bg)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '8px',
+                            color: 'var(--text)',
+                            fontSize: '14px'
+                          }}
+                        />
+                        <button onClick={() => { updateFormData('taxaEntrega', taxaEntregaPrev || 0); setShowTaxaEntregaEditor(false); }} style={{ padding: '8px 10px', borderRadius: '8px', background: '#6c757d', color: '#fff', border: 'none' }}>✕</button>
+                        <button onClick={() => setShowTaxaEntregaEditor(false)} style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--accent)', color: '#fff', border: 'none' }}>✔</button>
+                      </div>
+                    )}
                   </div>
                   <button
                     style={{
-                      marginTop: '26px',
+                      marginTop: (formData.taxaEntrega > 0 || showTaxaEntregaEditor) ? '0' : '26px',
                       width: '40px',
                       height: '40px',
                       background: 'var(--accent)',
@@ -1509,38 +1649,48 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                       alignItems: 'center',
                       justifyContent: 'center'
                     }}
+                    onClick={() => {
+                      setTaxaEntregaPrev(formData.taxaEntrega || 0);
+                      setShowTaxaEntregaEditor(true);
+                    }}
                   >
                     +
                   </button>
                 </div>
 
-                {/* Outras taxas */}
+                {/* Outras taxas - só mostra input se já tiver valor ou se usuário clicou + */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
                       Outras taxas (R$)
                     </label>
-                    <input
-                      type="number"
-                      value={formData.outrasTaxas}
-                      onChange={(e) => updateFormData('outrasTaxas', parseFloat(e.target.value) || 0)}
-                      placeholder="0,00"
-                      step="0.01"
-                      min="0"
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        background: 'var(--bg)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        color: 'var(--text)',
-                        fontSize: '14px'
-                      }}
-                    />
+                    {(formData.outrasTaxas > 0 || showOutrasTaxasEditor) && (
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          value={formData.outrasTaxas}
+                          onChange={(e) => updateFormData('outrasTaxas', parseFloat(e.target.value) || 0)}
+                          placeholder="0,00"
+                          step="0.01"
+                          min="0"
+                          style={{
+                            flex: 1,
+                            padding: '10px 12px',
+                            background: 'var(--bg)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '8px',
+                            color: 'var(--text)',
+                            fontSize: '14px'
+                          }}
+                        />
+                        <button onClick={() => { updateFormData('outrasTaxas', outrasTaxasPrev || 0); setShowOutrasTaxasEditor(false); }} style={{ padding: '8px 10px', borderRadius: '8px', background: '#6c757d', color: '#fff', border: 'none' }}>✕</button>
+                        <button onClick={() => setShowOutrasTaxasEditor(false)} style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--accent)', color: '#fff', border: 'none' }}>✔</button>
+                      </div>
+                    )}
                   </div>
                   <button
                     style={{
-                      marginTop: '26px',
+                      marginTop: (formData.outrasTaxas > 0 || showOutrasTaxasEditor) ? '0' : '26px',
                       width: '40px',
                       height: '40px',
                       background: 'var(--accent)',
@@ -1552,6 +1702,10 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center'
+                    }}
+                    onClick={() => {
+                      setOutrasTaxasPrev(formData.outrasTaxas || 0);
+                      setShowOutrasTaxasEditor(true);
                     }}
                   >
                     +
@@ -1616,32 +1770,19 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
 
             {secoes.detalhes && (
               <div style={{ paddingLeft: '8px', paddingRight: '8px' }}>
-                {/* Condições de pagamento */}
+                {/* Condições de pagamento - mostrar apenas resumo; painel aparece ao clicar + */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
                       Condições de pagamento
                     </label>
-                    <textarea
-                      value={formData.condicoesPagamento}
-                      onChange={(e) => updateFormData('condicoesPagamento', e.target.value)}
-                      placeholder="Ex: Sinal de 50% e restante após conclusão..."
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        background: 'var(--bg)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        color: 'var(--text)',
-                        fontSize: '14px',
-                        minHeight: '60px',
-                        resize: 'vertical'
-                      }}
-                    />
+                    <div style={{ padding: '10px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: formData.condicoesPagamento ? 'var(--text)' : 'var(--muted)' }}>
+                      {formData.condicoesPagamento ? formData.condicoesPagamento : '—'}
+                    </div>
                   </div>
                   <button
                     style={{
-                      marginTop: '26px',
+                      marginTop: '0',
                       width: '40px',
                       height: '40px',
                       background: 'var(--accent)',
@@ -1654,10 +1795,24 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                       alignItems: 'center',
                       justifyContent: 'center'
                     }}
+                    onClick={() => setShowCondicoesOptions(prev => !prev)}
                   >
                     +
                   </button>
                 </div>
+                {showCondicoesOptions && (
+                  <div style={{ marginTop: '8px', padding: '12px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                      <button onClick={() => updateFormData('condicoesPagamento', 'À vista')} style={{ padding: '8px 12px', background: formData.condicoesPagamento === 'À vista' ? 'var(--accent)' : 'var(--bg)', color: formData.condicoesPagamento === 'À vista' ? '#fff' : 'var(--text)', border: formData.condicoesPagamento === 'À vista' ? 'none' : '1px solid var(--border)', borderRadius: '8px' }}>À vista</button>
+                      <button onClick={() => updateFormData('condicoesPagamento', 'Sinal')} style={{ padding: '8px 12px', background: formData.condicoesPagamento === 'Sinal' ? 'var(--accent)' : 'var(--bg)', color: formData.condicoesPagamento === 'Sinal' ? '#fff' : 'var(--text)', border: formData.condicoesPagamento === 'Sinal' ? 'none' : '1px solid var(--border)', borderRadius: '8px' }}>Sinal</button>
+                      <button onClick={() => updateFormData('condicoesPagamento', 'Parcelado')} style={{ padding: '8px 12px', background: formData.condicoesPagamento === 'Parcelado' ? 'var(--accent)' : 'var(--bg)', color: formData.condicoesPagamento === 'Parcelado' ? '#fff' : 'var(--text)', border: formData.condicoesPagamento === 'Parcelado' ? 'none' : '1px solid var(--border)', borderRadius: '8px' }}>Parcelas</button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <input placeholder='Detalhes (ex: 50% sinal)' value={formData.condicoesPagamento} onChange={(e) => updateFormData('condicoesPagamento', e.target.value)} style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
+                      <button onClick={() => setShowCondicoesOptions(false)} style={{ padding: '8px 12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px' }}>Salvar</button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Meios de pagamento */}
                 <PaymentMethodSelector
@@ -1666,194 +1821,74 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                   label="Meios de pagamento"
                 />
 
-                {/* Garantia */}
+                {/* Garantia - resumo + editor numérico/unidade via '+' */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
                       Garantia
                     </label>
-                    <textarea
-                      value={formData.garantia}
-                      onChange={(e) => updateFormData('garantia', e.target.value)}
-                      placeholder="Informações sobre garantia..."
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        background: 'var(--bg)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        color: 'var(--text)',
-                        fontSize: '14px',
-                        minHeight: '60px',
-                        resize: 'vertical'
-                      }}
-                    />
+                    <div style={{ padding: '10px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: formData.garantia ? 'var(--text)' : 'var(--muted)' }}>
+                      {formData.garantia ? formData.garantia : '—'}
+                    </div>
                   </div>
-                  <button
-                    style={{
-                      marginTop: '26px',
-                      width: '40px',
-                      height: '40px',
-                      background: 'var(--accent)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      color: '#fff',
-                      fontSize: '20px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    +
-                  </button>
+                  <div>
+                    {!showGarantiaEditor && (
+                      <button onClick={() => { setGarantiaPeriodoPrev(formData.garantiaPeriodo || ''); setGarantiaUnidadePrev(formData.garantiaUnidade || 'meses'); setShowGarantiaEditor(true); }} style={{ marginTop: '0', width: '40px', height: '40px', background: 'var(--accent)', border: 'none', borderRadius: '50%', color: '#fff', fontSize: '20px', cursor: 'pointer' }}>+</button>
+                    )}
+                    {showGarantiaEditor && (
+                      <div style={{ marginTop: '8px', padding: '12px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                          <button onClick={() => { updateFormData('garantiaPeriodo', '0'); updateFormData('garantiaUnidade', 'meses'); }} style={{ padding: '8px 12px', background: (formData.garantiaPeriodo === '0') ? 'var(--accent)' : 'var(--bg)', color: (formData.garantiaPeriodo === '0') ? '#fff' : 'var(--text)', border: (formData.garantiaPeriodo === '0') ? 'none' : '1px solid var(--border)', borderRadius: '8px' }}>Sem garantia</button>
+                          <button onClick={() => { updateFormData('garantiaPeriodo', '3'); updateFormData('garantiaUnidade', 'meses'); }} style={{ padding: '8px 12px', background: (formData.garantiaPeriodo === '3' && formData.garantiaUnidade === 'meses') ? 'var(--accent)' : 'var(--bg)', color: (formData.garantiaPeriodo === '3' && formData.garantiaUnidade === 'meses') ? '#fff' : 'var(--text)', border: (formData.garantiaPeriodo === '3' && formData.garantiaUnidade === 'meses') ? 'none' : '1px solid var(--border)', borderRadius: '8px' }}>3 meses</button>
+                          <button onClick={() => { updateFormData('garantiaPeriodo', '12'); updateFormData('garantiaUnidade', 'meses'); }} style={{ padding: '8px 12px', background: (formData.garantiaPeriodo === '12' && formData.garantiaUnidade === 'meses') ? 'var(--accent)' : 'var(--bg)', color: (formData.garantiaPeriodo === '12' && formData.garantiaUnidade === 'meses') ? '#fff' : 'var(--text)', border: (formData.garantiaPeriodo === '12' && formData.garantiaUnidade === 'meses') ? 'none' : '1px solid var(--border)', borderRadius: '8px' }}>12 meses</button>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <input placeholder='Período' value={formData.garantiaPeriodo || garantiaPeriodoPrev || ''} onChange={(e) => updateFormData('garantiaPeriodo', e.target.value)} style={{ flex: 1, padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
+                          <select value={formData.garantiaUnidade || garantiaUnidadePrev} onChange={(e) => updateFormData('garantiaUnidade', e.target.value)} style={{ padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }}>
+                            <option value="meses">Meses</option>
+                            <option value="dias">Dias</option>
+                          </select>
+                          <button onClick={() => { updateFormData('garantiaPeriodo', garantiaPeriodoPrev || ''); updateFormData('garantiaUnidade', garantiaUnidadePrev || 'meses'); setShowGarantiaEditor(false); }} style={{ padding: '8px 12px', background: '#6c757d', color: '#fff', border: 'none', borderRadius: '8px' }}>✕</button>
+                          <button onClick={() => { const p = formData.garantiaPeriodo || garantiaPeriodoPrev || ''; const u = formData.garantiaUnidade || garantiaUnidadePrev || 'meses'; updateFormData('garantia', p ? `${p} ${u}` : ''); setShowGarantiaEditor(false); }} style={{ padding: '8px 12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px' }}>Salvar</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Cláusulas contratuais */}
-                <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
-                  Cláusulas contratuais
-                </label>
-                <div style={{
-                  padding: '10px 12px',
-                  marginBottom: '12px',
-                  background: 'var(--bg)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '8px',
-                  color: 'var(--muted)',
-                  fontSize: '13px',
-                  cursor: 'pointer'
-                }}>
-                  Adicionar cláusulas
-                </div>
-
-                {/* Informações adicionais */}
+                {/* Informações adicionais - abrir área livre ao clicar + */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
                       Informações adicionais
                     </label>
-                    <textarea
-                      value={formData.informacoesAdicionais}
-                      onChange={(e) => updateFormData('informacoesAdicionais', e.target.value)}
-                      placeholder="Informações extras..."
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        background: 'var(--bg)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        color: 'var(--text)',
-                        fontSize: '14px',
-                        minHeight: '60px',
-                        resize: 'vertical'
-                      }}
-                    />
+                    {(formData.informacoesAdicionais || showInformacoesEditor) && (
+                      <textarea
+                        value={formData.informacoesAdicionais}
+                        onChange={(e) => updateFormData('informacoesAdicionais', e.target.value)}
+                        placeholder="Informações extras..."
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          background: 'var(--bg)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '8px',
+                          color: 'var(--text)',
+                          fontSize: '14px',
+                          minHeight: '60px',
+                          resize: 'vertical'
+                        }}
+                      />
+                    )}
                   </div>
-                  <button
-                    style={{
-                      marginTop: '26px',
-                      width: '40px',
-                      height: '40px',
-                      background: 'var(--accent)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      color: '#fff',
-                      fontSize: '20px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    +
-                  </button>
+                  <div>
+                    {!showInformacoesEditor && (
+                      <button onClick={() => setShowInformacoesEditor(true)} style={{ marginTop: (formData.informacoesAdicionais ? '0' : '26px'), width: '40px', height: '40px', background: 'var(--accent)', border: 'none', borderRadius: '50%', color: '#fff', fontSize: '20px', cursor: 'pointer' }}>+</button>
+                    )}
+                  </div>
                 </div>
 
-                {/* Anotações */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
-                      Anotações
-                    </label>
-                    <textarea
-                      value={formData.anotacoes}
-                      onChange={(e) => updateFormData('anotacoes', e.target.value)}
-                      placeholder="Anotações internas..."
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        background: 'var(--bg)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        color: 'var(--text)',
-                        fontSize: '14px',
-                        minHeight: '60px',
-                        resize: 'vertical'
-                      }}
-                    />
-                  </div>
-                  <button
-                    style={{
-                      marginTop: '26px',
-                      width: '40px',
-                      height: '40px',
-                      background: 'var(--accent)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      color: '#fff',
-                      fontSize: '20px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    +
-                  </button>
-                </div>
-
-                {/* Relatório */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
-                      Relatório
-                    </label>
-                    <textarea
-                      value={formData.relatorio}
-                      onChange={(e) => updateFormData('relatorio', e.target.value)}
-                      placeholder="Relatório do serviço..."
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        background: 'var(--bg)',
-                        border: '1px solid var(--border)',
-                        borderRadius: '8px',
-                        color: 'var(--text)',
-                        fontSize: '14px',
-                        minHeight: '60px',
-                        resize: 'vertical'
-                      }}
-                    />
-                  </div>
-                  <button
-                    style={{
-                      marginTop: '26px',
-                      width: '40px',
-                      height: '40px',
-                      background: 'var(--accent)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      color: '#fff',
-                      fontSize: '20px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    +
-                  </button>
-                </div>
+                {/* Removed Anotações and Relatório per request - not rendered */}
               </div>
             )}
           </div>

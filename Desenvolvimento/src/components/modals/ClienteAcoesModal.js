@@ -3,6 +3,7 @@ import Modal from './Modal';
 import PagamentoModal from './PagamentoModal';
 import PedidosModal from './PedidosModal';
 import SelecionarClienteModal from './SelecionarClienteModal';
+import RelatorioModal from './RelatorioModal';
 import './ClienteAcoesModal.css';
 
 function ClienteAcoesModal({ isOpen, onClose, cliente, CLI, ORC, PAG, setCLI, setPAG, onNovoPedido }) {
@@ -11,6 +12,7 @@ function ClienteAcoesModal({ isOpen, onClose, cliente, CLI, ORC, PAG, setCLI, se
   const [pagamentoSelecionado, setPagamentoSelecionado] = useState(null);
   const [mostrarPagamentoModal, setMostrarPagamentoModal] = useState(false);
   const [mostrarPedidosModal, setMostrarPedidosModal] = useState(false);
+  const [mostrarRelatorioModal, setMostrarRelatorioModal] = useState(false);
   const [mostrarEditarCliente, setMostrarEditarCliente] = useState(false);
   const [secoesAbertas, setSecoesAbertas] = useState({
     pedidos: false,
@@ -98,6 +100,10 @@ function ClienteAcoesModal({ isOpen, onClose, cliente, CLI, ORC, PAG, setCLI, se
 
   const handleVerPedidos = () => {
     setMostrarPedidosModal(true);
+  };
+
+  const handleVerRelatorio = () => {
+    setMostrarRelatorioModal(true);
   };
 
   const handleVoltar = () => {
@@ -348,6 +354,10 @@ function ClienteAcoesModal({ isOpen, onClose, cliente, CLI, ORC, PAG, setCLI, se
                         <span className="atalho-label">Novo custo</span>
                       </button>
                       
+                      <button className="atalho-card" onClick={handleVerRelatorio}>
+                        <span className="atalho-icone">📊</span>
+                        <span className="atalho-label">Relatório do cliente</span>
+                      </button>
                       <button className="atalho-card">
                         <span className="atalho-icone">📆</span>
                         <span className="atalho-label">Novo compromisso</span>
@@ -367,6 +377,16 @@ function ClienteAcoesModal({ isOpen, onClose, cliente, CLI, ORC, PAG, setCLI, se
             </div>
           </div>
         </Modal>
+
+        {/* Modal de Relatório */}
+        {mostrarRelatorioModal && (
+          <RelatorioModal
+            isOpen={mostrarRelatorioModal}
+            onClose={() => setMostrarRelatorioModal(false)}
+            cliente={cliente}
+            ORC={ORC}
+          />
+        )}
 
         {/* Modal de Pagamento */}
         {mostrarPagamentoModal && (

@@ -56,12 +56,32 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {} }) {
     abrirEmJanela(html, `Orcamento_${pedido.numero}.pdf`);
   };
 
+  const handleGerarPDFRelatorio = () => {
+    const html = gerarHTMLRelatorio(cliente, pedidosCliente, financeiro);
+    abrirEmJanela(html, `Relatorio_${cliente.nome.replace(/\W/g, '_')}.pdf`);
+  };
+
   const handleCompartilharWhatsapp = (pedido) => {
-    const mensagem = `Olá ${cliente.nome}! 👋\n\nSegue em anexo o orçamento para o pedido Nº ${pedido.numero}.\n\nValor: ${formatarValor(calcularValorPedido(pedido))}\n\nPrecisa de mais informações? Estou à disposição! 📞`;
-    
     const numeroWhatsapp = cliente.whatsapp?.replace(/\D/g, '') || cliente.telefone?.replace(/\D/g, '');
+    if (!numeroWhatsapp) {
+      window.alert('Número de WhatsApp/telefone do cliente não informado.');
+      return;
+    }
+
+    const mensagem = `Olá ${cliente.nome}! 👋\n\nSegue em anexo o orçamento para o pedido Nº ${pedido.numero}.\n\nValor: ${formatarValor(calcularValorPedido(pedido))}\n\nPrecisa de mais informações? Estou à disposição! 📞`;
     const urlWhatsapp = `https://wa.me/55${numeroWhatsapp}?text=${encodeURIComponent(mensagem)}`;
-    
+    window.open(urlWhatsapp, '_blank');
+  };
+
+  const handleCompartilharWhatsappRelatorio = () => {
+    const numeroWhatsapp = cliente.whatsapp?.replace(/\D/g, '') || cliente.telefone?.replace(/\D/g, '');
+    if (!numeroWhatsapp) {
+      window.alert('Número de WhatsApp/telefone do cliente não informado.');
+      return;
+    }
+
+    const mensagem = `Olá ${cliente.nome}! 👋\n\nSegue o relatório de faturamento com os pedidos realizados, valores pagos e pendentes.\n\nTotal faturado: ${formatarValor(financeiro.totalFaturado)}\nTotal pago: ${formatarValor(financeiro.totalPago)}\nA receber: ${formatarValor(financeiro.totalPendente)}\n\nSe quiser, posso enviar o orçamento de um pedido específico.`;
+    const urlWhatsapp = `https://wa.me/55${numeroWhatsapp}?text=${encodeURIComponent(mensagem)}`;
     window.open(urlWhatsapp, '_blank');
   };
 
@@ -77,6 +97,111 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {} }) {
     const janela = window.open('', '_blank');
     janela.document.write(html);
     janela.document.close();
+  };
+
+  const gerarHTMLRelatorio = (cliente, pedidos, financeiro) => {
+    const pedidosHtml = pedidos.length === 0 ? '<p>Nenhum pedido registrado.</p>' : pedidos.map(pedido => {
+      const valorPedido = calcularValorPedido(pedido);
+      const totalPago = (pedido.pagamentos || []).reduce((sum, p) => sum + (p.valor || 0), 0);
+      const pendente = valorPedido - totalPago;
+      const status = statusConfig[pedido.status] || { label: pedido.status || 'Desconhecido', cor: '#999', icon: '•' };
+
+      return `
+        <div class="pedido-item">
+          <div class="pedido-item-top">
+            <strong>Pedido Nº ${pedido.numero}</strong>
+            <span class="pedido-status" style="background:${status.cor};">${status.icon} ${status.label}</span>
+          </div>
+          <div class="pedido-item-linha">
+            <span>Data:</span><span>${pedido.criadoEm || '-'}</span>
+          </div>
+          <div class="pedido-item-linha">
+            <span>Referência:</span><span>${pedido.referencia || '-'}</span>
+          </div>
+          <div class="pedido-item-linha">
+            <span>Valor:</span><span>${formatarValor(valorPedido)}</span>
+          </div>
+          <div class="pedido-item-linha">
+            <span>Pago:</span><span>${formatarValor(totalPago)}</span>
+          </div>
+          <div class="pedido-item-linha">
+            <span>Pendente:</span><span>${formatarValor(pendente)}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Relatório ${cliente.nome}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; color: #333; background: white; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { font-size: 32px; color: #6c63ff; margin-bottom: 6px; }
+    .header p { font-size: 14px; color: #666; }
+    .resumo { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-top: 30px; }
+    .bloco { background: #f8f8ff; border-radius: 14px; padding: 22px; border: 1px solid #e7e7f5; }
+    .bloco h3 { margin-bottom: 16px; color: #333; font-size: 16px; }
+    .info-linha { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e7e7f5; font-size: 14px; }
+    .info-linha:last-child { border-bottom: none; }
+    .info-label { color: #6b7280; }
+    .info-valor { font-weight: 600; }
+    .pedido-item { margin-bottom: 18px; padding: 18px; border-radius: 14px; background: #fff; box-shadow: 0 8px 20px rgba(0,0,0,0.03); }
+    .pedido-item-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 12px; }
+    .pedido-status { border-radius: 999px; padding: 4px 12px; color: white; font-size: 12px; }
+    .pedido-item-linha { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #f1f1f7; font-size: 14px; }
+    .pedido-item-linha:first-of-type { border-top: none; }
+    .seta { display: inline-block; margin-left: 6px; }
+    .cliente-info { margin-top: 20px; padding: 24px; border-radius: 16px; background: #fafafa; border: 1px solid #e9e9f2; }
+    .cliente-info h3 { margin-bottom: 12px; font-size: 16px; color: #333; }
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e8e8f1; color: #666; font-size: 13px; text-align: center; }
+    @media print { body { padding: 18px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Relatório de Faturamento</h1>
+    <p>${cliente.nome} • ${cliente.telefone || cliente.whatsapp || 'Contato não informado'}</p>
+  </div>
+
+  <div class="cliente-info">
+    <h3>Dados do Cliente</h3>
+    <div class="info-linha"><span class="info-label">Nome</span><span class="info-valor">${cliente.nome}</span></div>
+    <div class="info-linha"><span class="info-label">Telefone</span><span class="info-valor">${cliente.telefone || cliente.whatsapp || 'Não informado'}</span></div>
+    <div class="info-linha"><span class="info-label">E-mail</span><span class="info-valor">${cliente.email || 'Não informado'}</span></div>
+    <div class="info-linha"><span class="info-label">Endereço</span><span class="info-valor">${cliente.endereco || 'Não informado'}</span></div>
+  </div>
+
+  <div class="resumo">
+    <div class="bloco">
+      <h3>Total Faturado</h3>
+      <div class="info-linha"><span class="info-label">Valor</span><span class="info-valor">${formatarValor(financeiro.totalFaturado)}</span></div>
+    </div>
+    <div class="bloco">
+      <h3>Total Pago</h3>
+      <div class="info-linha"><span class="info-label">Valor</span><span class="info-valor">${formatarValor(financeiro.totalPago)}</span></div>
+    </div>
+    <div class="bloco">
+      <h3>A Receber</h3>
+      <div class="info-linha"><span class="info-label">Valor</span><span class="info-valor">${formatarValor(financeiro.totalPendente)}</span></div>
+    </div>
+  </div>
+
+  <div style="margin-top: 34px;">
+    <h3 style="font-size: 18px; margin-bottom: 18px; color: #333;">Pedidos do Cliente</h3>
+    ${pedidosHtml}
+  </div>
+
+  <div class="footer">
+    <p>Documento gerado automaticamente pelo Mestre.IA</p>
+  </div>
+</body>
+</html>
+    `;
   };
 
   const gerarHTMLOrcamento = (pedido, cliente) => {
@@ -339,6 +464,15 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {} }) {
                 <div className="card-titulo">A Receber</div>
                 <div className="card-valor-grande">{formatarValor(financeiro.totalPendente)}</div>
               </div>
+            </div>
+
+            <div className="relatorio-acoes">
+              <button className="btn-gerar-relatorio" onClick={handleGerarPDFRelatorio}>
+                📄 Gerar relatório em PDF
+              </button>
+              <button className="btn-whatsapp-relatorio" onClick={handleCompartilharWhatsappRelatorio}>
+                💬 Compartilhar WhatsApp
+              </button>
             </div>
 
             {/* Lista de pedidos */}

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 
-function TimePickerClock({ value, onChange, label }) {
-  const [isOpen, setIsOpen] = useState(false);
+function TimePickerClock({ value, onChange, label, hideInput = false, autoOpen = false }) {
+  const [isOpen, setIsOpen] = useState(autoOpen || false);
+  React.useEffect(() => {
+    if (autoOpen) setIsOpen(true);
+  }, [autoOpen]);
   
   // Converte valor HH:MM para objeto {hours, minutes}
   const parseTime = (timeStr) => {
@@ -77,43 +80,45 @@ function TimePickerClock({ value, onChange, label }) {
         {label}
       </label>
 
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <input
-          type="text"
-          value={value}
-          onChange={handleDirectInput}
-          placeholder="--:--"
-          style={{
-            flex: 1,
-            padding: '10px 12px',
-            background: 'var(--bg)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            color: 'var(--text)',
-            fontSize: '14px',
-            cursor: 'pointer',
-            textAlign: 'center',
-            fontFamily: 'monospace',
-            fontWeight: '600'
-          }}
-          onClick={() => setIsOpen(!isOpen)}
-        />
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          style={{
-            padding: '10px 16px',
-            background: 'var(--primary)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: '500'
-          }}
-        >
-          🕐
-        </button>
-      </div>
+      {!hideInput && (
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input
+            type="text"
+            value={value}
+            onChange={handleDirectInput}
+            placeholder="--:--"
+            style={{
+              flex: 1,
+              padding: '10px 12px',
+              background: 'var(--bg)',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              color: 'var(--text)',
+              fontSize: '14px',
+              cursor: 'pointer',
+              textAlign: 'center',
+              fontFamily: 'monospace',
+              fontWeight: '600'
+            }}
+            onClick={() => setIsOpen(!isOpen)}
+          />
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            style={{
+              padding: '10px 16px',
+              background: 'var(--primary)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: '500'
+            }}
+          >
+            🕐
+          </button>
+        </div>
+      )}
 
       {/* Modal do relógio digital */}
       {isOpen && (

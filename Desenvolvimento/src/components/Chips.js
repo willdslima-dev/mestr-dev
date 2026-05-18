@@ -5,7 +5,8 @@ function Chips({ onChipClick }) {
   const [chips] = useState([
     '📋 Novo pedido',
     '👥 Lista de clientes',
-    '📦 Pedidos'
+    '📦 Pedidos',
+    '📊 Relatório de cliente'
   ]);
 
   return (

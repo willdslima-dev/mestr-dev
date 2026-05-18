@@ -11,6 +11,7 @@ import CatalogoModal from './components/modals/CatalogoModal';
 import ConfigModal from './components/modals/ConfigModal';
 import SelecionarClienteModal from './components/modals/SelecionarClienteModal';
 import ClienteAcoesModal from './components/modals/ClienteAcoesModal';
+import RelatorioModal from './components/modals/RelatorioModal';
 import GerarDocumentoModal from './components/modals/GerarDocumentoModal';
 import PedidoModal from './components/modals/PedidoModal';
 import PedidosModal from './components/modals/PedidosModal';
@@ -33,6 +34,7 @@ function App() {
     config: false,
     selecionarCliente: false,
     clienteAcoes: false,
+    relatorio: false,
     gerarDocumento: false,
     pedido: false,
     pedidos: false,
@@ -40,6 +42,7 @@ function App() {
   });
 
   const [clienteSelecionado, setClienteSelecionado] = useState(null);
+  const [onClienteSelecionadoCallback, setOnClienteSelecionadoCallback] = useState(null);
   
   // IA: Verifica se tem chave configurada
   const [iaAtiva, setIaAtiva] = useState(() => {
@@ -86,6 +89,19 @@ function App() {
 
   const fecharModal = (nome) => {
     setModals(prev => ({ ...prev, [nome]: false }));
+  };
+
+  const handleClienteSelecionado = (cliente) => {
+    setClienteSelecionado(cliente);
+    fecharModal('selecionarCliente');
+
+    if (onClienteSelecionadoCallback) {
+      onClienteSelecionadoCallback(cliente);
+      setOnClienteSelecionadoCallback(null);
+      return;
+    }
+
+    abrirModal('clienteAcoes');
   };
 
   const handleEnviar = (texto) => {
@@ -181,8 +197,13 @@ function App() {
   };
 
   const handleChipClick = (texto) => {
-    // Remove emojis e limpa o texto
-    const comando = texto.replace(/[^\w\s]/gi, '').trim().toLowerCase();
+    // Remove acentos, emojis e caracteres especiais
+    const comando = texto
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s]/gi, '')
+      .trim()
+      .toLowerCase();
     
     // Se for "novo pedido", abre modal de pedido SEM cliente pré-selecionado
     if (comando.includes('novo pedido') || comando.includes('novo orcamento')) {
@@ -193,6 +214,17 @@ function App() {
     
     // Se for "lista de clientes", abre modal de seleção de cliente
     if (comando.includes('lista de clientes') || comando.includes('listar clientes')) {
+      setOnClienteSelecionadoCallback(null);
+      abrirModal('selecionarCliente');
+      return;
+    }
+
+    // Se for relatório de cliente, abre seleção de cliente e depois relatório
+    if (comando.includes('relatorio') || comando.includes('relatório')) {
+      setOnClienteSelecionadoCallback(() => (cliente) => {
+        setClienteSelecionado(cliente);
+        abrirModal('relatorio');
+      });
       abrirModal('selecionarCliente');
       return;
     }
@@ -258,15 +290,14 @@ function App() {
       />
       <SelecionarClienteModal
         isOpen={modals.selecionarCliente}
-        onClose={() => fecharModal('selecionarCliente')}
+        onClose={() => {
+          fecharModal('selecionarCliente');
+          setOnClienteSelecionadoCallback(null);
+        }}
         CLI={CLI}
         setCLI={setCLI}
         ORC={ORC}
-        onClienteSelecionado={(cliente) => {
-          setClienteSelecionado(cliente);
-          fecharModal('selecionarCliente');
-          abrirModal('clienteAcoes');
-        }}
+        onClienteSelecionado={handleClienteSelecionado}
       />
       <ClienteAcoesModal
         isOpen={modals.clienteAcoes}
@@ -284,6 +315,15 @@ function App() {
           fecharModal('clienteAcoes');
           abrirModal('pedido');
         }}
+      />
+      <RelatorioModal
+        isOpen={modals.relatorio}
+        onClose={() => {
+          fecharModal('relatorio');
+          setClienteSelecionado(null);
+        }}
+        cliente={clienteSelecionado}
+        ORC={ORC}
       />
       <GerarDocumentoModal
         isOpen={modals.gerarDocumento}
