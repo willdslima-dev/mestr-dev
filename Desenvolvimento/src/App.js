@@ -308,6 +308,7 @@ function App() {
         cliente={clienteSelecionado}
         CLI={CLI}
         ORC={ORC}
+        setORC={setORC}
         PAG={PAG}
         setCLI={setCLI}
         setPAG={setPAG}
@@ -324,6 +325,7 @@ function App() {
         }}
         cliente={clienteSelecionado}
         ORC={ORC}
+        PAG={PAG}
       />
       <GerarDocumentoModal
         isOpen={modals.gerarDocumento}

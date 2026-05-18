@@ -182,3 +182,106 @@
   opacity: 0.9;
   transform: translateY(-1px);
 }
+
+/* Seleção de pedido vinculado ao recebimento */
+.pedidos-pagamento-titulo {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.pedidos-pagamento-hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.pedidos-pagamento-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.pedido-pagamento-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.pedido-pagamento-item:hover {
+  border-color: var(--accent);
+}
+
+.pedido-pagamento-item.selecionado {
+  border-color: var(--accent);
+  background: rgba(108, 99, 255, 0.08);
+}
+
+.pedido-pagamento-item input[type='radio'] {
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+.pedido-pagamento-corpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.pedido-pagamento-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.pedido-pagamento-numero {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.pedido-pagamento-data {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pedido-pagamento-ref {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.pedido-pagamento-valores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.pedido-pagamento-valores span strong {
+  color: var(--text);
+}
+
+.pedido-pagamento-pendente {
+  color: #f5a623;
+}
+
+.pedido-pagamento-vazio {
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--bg3);
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+}

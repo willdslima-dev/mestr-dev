@@ -6,7 +6,7 @@ import SelecionarClienteModal from './SelecionarClienteModal';
 import RelatorioModal from './RelatorioModal';
 import './ClienteAcoesModal.css';
 
-function ClienteAcoesModal({ isOpen, onClose, cliente, CLI, ORC, PAG, setCLI, setPAG, onNovoPedido }) {
+function ClienteAcoesModal({ isOpen, onClose, cliente, CLI, ORC, setORC, PAG, setCLI, setPAG, onNovoPedido }) {
   const [tela, setTela] = useState('principal'); // 'principal', 'lista-pagamentos', 'lista-pedidos'
   const [statusSelecionado, setStatusSelecionado] = useState(null);
   const [pagamentoSelecionado, setPagamentoSelecionado] = useState(null);
@@ -385,6 +385,7 @@ function ClienteAcoesModal({ isOpen, onClose, cliente, CLI, ORC, PAG, setCLI, se
             onClose={() => setMostrarRelatorioModal(false)}
             cliente={cliente}
             ORC={ORC}
+            PAG={PAG}
           />
         )}
 
@@ -400,6 +401,8 @@ function ClienteAcoesModal({ isOpen, onClose, cliente, CLI, ORC, PAG, setCLI, se
             clientePadrao={cliente}
             PAG={PAG}
             setPAG={setPAG}
+            ORC={ORC}
+            setORC={setORC}
           />
         )}
 
@@ -474,6 +477,11 @@ function ClienteAcoesModal({ isOpen, onClose, cliente, CLI, ORC, PAG, setCLI, se
                         <div className="pagamento-data">
                           Data do recebimento: {pag.dataRecebimento || '—'}
                         </div>
+                        {(pag.pedidoNumero || pag.pedidoId) && (
+                          <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
+                            Pedido nº {pag.pedidoNumero || ORC?.[pag.pedidoId]?.numero || '—'}
+                          </div>
+                        )}
                       </div>
                       <div className="pagamento-valor">
                         <span className="label-valor">Valor:</span>
@@ -511,6 +519,8 @@ function ClienteAcoesModal({ isOpen, onClose, cliente, CLI, ORC, PAG, setCLI, se
             statusPadrao={statusSelecionado}
             PAG={PAG}
             setPAG={setPAG}
+            ORC={ORC}
+            setORC={setORC}
           />
         )}
       </>

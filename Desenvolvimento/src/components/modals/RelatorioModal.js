@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Modal from './Modal';
+import {
+  calcularValorPedido,
+  getRecebimentosCliente,
+  getTotalPagoPedido,
+  statusContaComoPago
+} from '../../utils/pagamentoSync';
 import './RelatorioModal.css';
 
-function RelatorioModal({ isOpen, onClose, cliente, ORC = {} }) {
+function RelatorioModal({ isOpen, onClose, cliente, ORC = {}, PAG = {} }) {
   const [abaAtiva, setAbaAtiva] = useState('faturamento'); // 'faturamento' ou 'orcamento'
   const [pedidoSelecionado, setPedidoSelecionado] = useState(null);
 
@@ -11,24 +17,24 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {} }) {
     ? Object.values(ORC).filter(p => p.clienteId === cliente.id)
     : [];
 
-  // Calcula dados financeiros
+  const recebimentosCliente = useMemo(() => {
+    if (!cliente) return [];
+    return getRecebimentosCliente(PAG, cliente.id, ORC).filter((p) =>
+      statusContaComoPago(p.status)
+    );
+  }, [PAG, cliente, ORC]);
+
   const calcularFinanceiro = () => {
     let totalFaturado = 0;
     let totalPago = 0;
     let totalPendente = 0;
 
-    pedidosCliente.forEach(pedido => {
-      const totalServicos = (pedido.servicos || []).reduce((acc, s) => 
-        acc + ((s.valorUnitario || 0) * (s.quantidade || 1)), 0);
-      const totalMateriais = (pedido.materiais || []).reduce((acc, m) => 
-        acc + ((m.valorUnitario || 0) * (m.quantidade || 1)), 0);
-      const subtotal = totalServicos + totalMateriais;
-      const valorFinal = subtotal - (pedido.desconto || 0);
-      
+    pedidosCliente.forEach((pedido) => {
+      const valorFinal = calcularValorPedido(pedido);
+      const totalPagoAtual = getTotalPagoPedido(pedido, PAG);
       totalFaturado += valorFinal;
-      const totalPagoAtual = (pedido.pagamentos || []).reduce((sum, p) => sum + (p.valor || 0), 0);
       totalPago += totalPagoAtual;
-      totalPendente += (valorFinal - totalPagoAtual);
+      totalPendente += Math.max(0, valorFinal - totalPagoAtual);
     });
 
     return { totalFaturado, totalPago, totalPendente };
@@ -57,7 +63,7 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {} }) {
   };
 
   const handleGerarPDFRelatorio = () => {
-    const html = gerarHTMLRelatorio(cliente, pedidosCliente, financeiro);
+    const html = gerarHTMLRelatorio(cliente, pedidosCliente, financeiro, recebimentosCliente);
     abrirEmJanela(html, `Relatorio_${cliente.nome.replace(/\W/g, '_')}.pdf`);
   };
 
@@ -85,12 +91,13 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {} }) {
     window.open(urlWhatsapp, '_blank');
   };
 
-  const calcularValorPedido = (pedido) => {
-    const totalServicos = (pedido.servicos || []).reduce((acc, s) => 
-      acc + ((s.valorUnitario || 0) * (s.quantidade || 1)), 0);
-    const totalMateriais = (pedido.materiais || []).reduce((acc, m) => 
-      acc + ((m.valorUnitario || 0) * (m.quantidade || 1)), 0);
-    return totalServicos + totalMateriais - (pedido.desconto || 0);
+  const formatarDataRecebimento = (data) => {
+    if (!data) return '—';
+    try {
+      return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+    } catch {
+      return data;
+    }
   };
 
   const abrirEmJanela = (html, nome) => {
@@ -99,10 +106,26 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {} }) {
     janela.document.close();
   };
 
-  const gerarHTMLRelatorio = (cliente, pedidos, financeiro) => {
+  const gerarHTMLRelatorio = (cliente, pedidos, financeiro, recebimentos) => {
+    const recebimentosHtml =
+      recebimentos.length === 0
+        ? '<p>Nenhum recebimento registrado.</p>'
+        : recebimentos
+            .map(
+              (rec) => `
+        <div class="recebimento-item">
+          <div class="pedido-item-linha"><span>Data recebida:</span><span>${formatarDataRecebimento(rec.dataRecebimento)}</span></div>
+          <div class="pedido-item-linha"><span>Valor:</span><span>${formatarValor(parseFloat(rec.valor) || 0)}</span></div>
+          <div class="pedido-item-linha"><span>Pedido:</span><span>${rec.pedidoNumero ? `Nº ${rec.pedidoNumero}` : 'Não vinculado'}</span></div>
+          <div class="pedido-item-linha"><span>Referência:</span><span>${rec.referencia || '—'}</span></div>
+        </div>
+      `
+            )
+            .join('');
+
     const pedidosHtml = pedidos.length === 0 ? '<p>Nenhum pedido registrado.</p>' : pedidos.map(pedido => {
       const valorPedido = calcularValorPedido(pedido);
-      const totalPago = (pedido.pagamentos || []).reduce((sum, p) => sum + (p.valor || 0), 0);
+      const totalPago = getTotalPagoPedido(pedido, PAG);
       const pendente = valorPedido - totalPago;
       const status = statusConfig[pedido.status] || { label: pedido.status || 'Desconhecido', cor: '#999', icon: '•' };
 
@@ -189,6 +212,11 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {} }) {
       <h3>A Receber</h3>
       <div class="info-linha"><span class="info-label">Valor</span><span class="info-valor">${formatarValor(financeiro.totalPendente)}</span></div>
     </div>
+  </div>
+
+  <div style="margin-top: 34px;">
+    <h3 style="font-size: 18px; margin-bottom: 18px; color: #333;">Recebimentos</h3>
+    ${recebimentosHtml}
   </div>
 
   <div style="margin-top: 34px;">
@@ -475,6 +503,49 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {} }) {
               </button>
             </div>
 
+            <div className="lista-recebimentos" style={{ marginBottom: '24px' }}>
+              <h3>💵 Recebimentos</h3>
+              {recebimentosCliente.length === 0 ? (
+                <p className="sem-pedidos">Nenhum recebimento registrado para este cliente.</p>
+              ) : (
+                <div className="pedidos-grid">
+                  {recebimentosCliente.map((rec) => (
+                    <div key={rec.id} className="card-pedido card-recebimento">
+                      <div className="pedido-numero">
+                        {formatarValor(parseFloat(rec.valor) || 0)}
+                      </div>
+                      <div className="pedido-info">
+                        <div className="info-linha">
+                          <span className="label">Recebido em:</span>
+                          <span>{formatarDataRecebimento(rec.dataRecebimento)}</span>
+                        </div>
+                        <div className="info-linha destaque">
+                          <span className="label">Pedido:</span>
+                          <span>
+                            {rec.pedidoNumero
+                              ? `Nº ${rec.pedidoNumero}`
+                              : 'Não vinculado'}
+                          </span>
+                        </div>
+                        {rec.referencia && (
+                          <div className="info-linha">
+                            <span className="label">Referência:</span>
+                            <span>{rec.referencia}</span>
+                          </div>
+                        )}
+                        {rec.meioPagamento && (
+                          <div className="info-linha">
+                            <span className="label">Meio:</span>
+                            <span>{rec.meioPagamento}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Lista de pedidos */}
             <div className="lista-pedidos">
               <h3>📋 Pedidos Realizados</h3>
@@ -484,7 +555,7 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {} }) {
                 <div className="pedidos-grid">
                   {pedidosCliente.map(pedido => {
                     const valorPedido = calcularValorPedido(pedido);
-                    const totalPago = (pedido.pagamentos || []).reduce((sum, p) => sum + (p.valor || 0), 0);
+                    const totalPago = getTotalPagoPedido(pedido, PAG);
                     const status = statusConfig[pedido.status] || { label: 'Desconhecido', cor: '#999', icon: '?' };
 
                     return (

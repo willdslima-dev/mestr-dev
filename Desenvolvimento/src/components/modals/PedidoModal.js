@@ -205,6 +205,47 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
     setFormData(prev => ({ ...prev, [campo]: valor }));
   };
 
+  const salvarGarantia = () => {
+    const p = formData.garantiaPeriodo || garantiaPeriodoPrev || '';
+    const u = formData.garantiaUnidade || garantiaUnidadePrev || 'meses';
+    const texto = p === '0' ? 'Sem garantia' : (p ? `${p} ${u}` : '');
+    updateFormData('garantia', texto);
+    setShowGarantiaEditor(false);
+  };
+
+  const cancelarGarantiaEditor = () => {
+    updateFormData('garantiaPeriodo', garantiaPeriodoPrev || '');
+    updateFormData('garantiaUnidade', garantiaUnidadePrev || 'meses');
+    setShowGarantiaEditor(false);
+  };
+
+  const abrirGarantiaEditor = () => {
+    setGarantiaPeriodoPrev(formData.garantiaPeriodo || '');
+    setGarantiaUnidadePrev(formData.garantiaUnidade || 'meses');
+    setShowGarantiaEditor(true);
+  };
+
+  const removerGarantia = () => {
+    updateFormData('garantia', '');
+    updateFormData('garantiaPeriodo', '');
+    updateFormData('garantiaUnidade', 'meses');
+    setShowGarantiaEditor(false);
+  };
+
+  const garantiaBoxStyle = {
+    marginTop: '8px',
+    padding: '10px 12px',
+    background: 'var(--bg3)',
+    border: '1px solid var(--border)',
+    borderRadius: '8px',
+    fontSize: '13px',
+    color: 'var(--muted)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px'
+  };
+
   // Handlers para Cliente
   const handleAbrirSelecionarCliente = () => {
     setShowClienteModal(true);
@@ -1250,34 +1291,47 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                     <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
                       Garantia
                     </label>
-                    {(formData.garantia || showGarantiaEditor) && (
+                    {showGarantiaEditor && (
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input type="number" min="0" value={formData.garantiaPeriodo || garantiaPeriodoPrev || ''} onChange={(e) => { updateFormData('garantiaPeriodo', e.target.value); }} placeholder="0" style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
+                        <input type="number" min="0" value={formData.garantiaPeriodo || garantiaPeriodoPrev || ''} onChange={(e) => updateFormData('garantiaPeriodo', e.target.value)} placeholder="0" style={{ flex: 1, padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }} />
                         <select value={formData.garantiaUnidade || garantiaUnidadePrev} onChange={(e) => updateFormData('garantiaUnidade', e.target.value)} style={{ padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)' }}>
                           <option value="meses">Meses</option>
                           <option value="dias">Dias</option>
                         </select>
                       </div>
                     )}
+
+                    {formData.garantia && !showGarantiaEditor && (
+                      <div style={garantiaBoxStyle}>
+                        <span>Garantia: {formData.garantia}</span>
+                        <button
+                          type="button"
+                          onClick={removerGarantia}
+                          title="Remover garantia"
+                          style={{
+                            padding: '4px 8px',
+                            background: 'transparent',
+                            border: '1px solid var(--border)',
+                            borderRadius: '6px',
+                            color: 'var(--text)',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            flexShrink: 0
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div>
                     {!showGarantiaEditor && (
-                      <button onClick={() => { setGarantiaPeriodoPrev(formData.garantiaPeriodo || ''); setGarantiaUnidadePrev(formData.garantiaUnidade || 'meses'); setShowGarantiaEditor(true); }} style={{ marginTop: (formData.garantia || showGarantiaEditor) ? '0' : '26px', width: '40px', height: '40px', background: 'var(--accent)', border: 'none', borderRadius: '50%', color: '#fff', fontSize: '20px', cursor: 'pointer' }}>+</button>
+                      <button onClick={abrirGarantiaEditor} style={{ marginTop: formData.garantia ? '0' : '26px', width: '40px', height: '40px', background: 'var(--accent)', border: 'none', borderRadius: '50%', color: '#fff', fontSize: '20px', cursor: 'pointer', flexShrink: 0 }}>+</button>
                     )}
                     {showGarantiaEditor && (
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => {
-                          // Cancelar edição
-                          updateFormData('garantiaPeriodo', garantiaPeriodoPrev || '');
-                          updateFormData('garantiaUnidade', garantiaUnidadePrev || 'meses');
-                          setShowGarantiaEditor(false);
-                        }} style={{ padding: '8px 10px', borderRadius: '8px', background: '#6c757d', color: '#fff', border: 'none' }}>✕</button>
-                        <button onClick={() => {
-                          const p = formData.garantiaPeriodo || garantiaPeriodoPrev || '';
-                          const u = formData.garantiaUnidade || garantiaUnidadePrev || 'meses';
-                          updateFormData('garantia', p ? `${p} ${u}` : '');
-                          setShowGarantiaEditor(false);
-                        }} style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--accent)', color: '#fff', border: 'none' }}>✔</button>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '26px' }}>
+                        <button onClick={cancelarGarantiaEditor} style={{ padding: '8px 10px', borderRadius: '8px', background: '#6c757d', color: '#fff', border: 'none', cursor: 'pointer' }}>✕</button>
+                        <button onClick={salvarGarantia} style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--accent)', color: '#fff', border: 'none', cursor: 'pointer' }}>✔</button>
                       </div>
                     )}
                   </div>
@@ -1821,23 +1875,17 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                   label="Meios de pagamento"
                 />
 
-                {/* Garantia - resumo + editor numérico/unidade via '+' */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                {/* Garantia - editor via '+' e resumo abaixo após salvar */}
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
                       Garantia
                     </label>
-                    <div style={{ padding: '10px 12px', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '8px', color: formData.garantia ? 'var(--text)' : 'var(--muted)' }}>
-                      {formData.garantia ? formData.garantia : '—'}
-                    </div>
-                  </div>
-                  <div>
-                    {!showGarantiaEditor && (
-                      <button onClick={() => { setGarantiaPeriodoPrev(formData.garantiaPeriodo || ''); setGarantiaUnidadePrev(formData.garantiaUnidade || 'meses'); setShowGarantiaEditor(true); }} style={{ marginTop: '0', width: '40px', height: '40px', background: 'var(--accent)', border: 'none', borderRadius: '50%', color: '#fff', fontSize: '20px', cursor: 'pointer' }}>+</button>
-                    )}
-                    {showGarantiaEditor && (
-                      <div style={{ marginTop: '8px', padding: '12px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+
+                      {showGarantiaEditor && (
+                        <div style={{ marginTop: '8px', padding: '12px', background: 'var(--bg3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
                           <button onClick={() => { updateFormData('garantiaPeriodo', '0'); updateFormData('garantiaUnidade', 'meses'); }} style={{ padding: '8px 12px', background: (formData.garantiaPeriodo === '0') ? 'var(--accent)' : 'var(--bg)', color: (formData.garantiaPeriodo === '0') ? '#fff' : 'var(--text)', border: (formData.garantiaPeriodo === '0') ? 'none' : '1px solid var(--border)', borderRadius: '8px' }}>Sem garantia</button>
                           <button onClick={() => { updateFormData('garantiaPeriodo', '3'); updateFormData('garantiaUnidade', 'meses'); }} style={{ padding: '8px 12px', background: (formData.garantiaPeriodo === '3' && formData.garantiaUnidade === 'meses') ? 'var(--accent)' : 'var(--bg)', color: (formData.garantiaPeriodo === '3' && formData.garantiaUnidade === 'meses') ? '#fff' : 'var(--text)', border: (formData.garantiaPeriodo === '3' && formData.garantiaUnidade === 'meses') ? 'none' : '1px solid var(--border)', borderRadius: '8px' }}>3 meses</button>
                           <button onClick={() => { updateFormData('garantiaPeriodo', '12'); updateFormData('garantiaUnidade', 'meses'); }} style={{ padding: '8px 12px', background: (formData.garantiaPeriodo === '12' && formData.garantiaUnidade === 'meses') ? 'var(--accent)' : 'var(--bg)', color: (formData.garantiaPeriodo === '12' && formData.garantiaUnidade === 'meses') ? '#fff' : 'var(--text)', border: (formData.garantiaPeriodo === '12' && formData.garantiaUnidade === 'meses') ? 'none' : '1px solid var(--border)', borderRadius: '8px' }}>12 meses</button>
@@ -1848,10 +1896,54 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                             <option value="meses">Meses</option>
                             <option value="dias">Dias</option>
                           </select>
-                          <button onClick={() => { updateFormData('garantiaPeriodo', garantiaPeriodoPrev || ''); updateFormData('garantiaUnidade', garantiaUnidadePrev || 'meses'); setShowGarantiaEditor(false); }} style={{ padding: '8px 12px', background: '#6c757d', color: '#fff', border: 'none', borderRadius: '8px' }}>✕</button>
-                          <button onClick={() => { const p = formData.garantiaPeriodo || garantiaPeriodoPrev || ''; const u = formData.garantiaUnidade || garantiaUnidadePrev || 'meses'; updateFormData('garantia', p ? `${p} ${u}` : ''); setShowGarantiaEditor(false); }} style={{ padding: '8px 12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px' }}>Salvar</button>
+                            <button onClick={cancelarGarantiaEditor} style={{ padding: '8px 12px', background: '#6c757d', color: '#fff', border: 'none', borderRadius: '8px' }}>✕</button>
+                            <button onClick={salvarGarantia} style={{ padding: '8px 12px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: '8px' }}>Salvar</button>
+                          </div>
                         </div>
-                      </div>
+                      )}
+
+                      {formData.garantia && !showGarantiaEditor && (
+                        <div style={garantiaBoxStyle}>
+                          <span>Garantia: {formData.garantia}</span>
+                          <button
+                            type="button"
+                            onClick={removerGarantia}
+                            title="Remover garantia"
+                            style={{
+                              padding: '4px 8px',
+                              background: 'transparent',
+                              border: '1px solid var(--border)',
+                              borderRadius: '6px',
+                              color: 'var(--text)',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              flexShrink: 0
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {!showGarantiaEditor && (
+                      <button
+                        onClick={abrirGarantiaEditor}
+                        style={{
+                          marginTop: formData.garantia ? '0' : '26px',
+                          width: '40px',
+                          height: '40px',
+                          background: 'var(--accent)',
+                          border: 'none',
+                          borderRadius: '50%',
+                          color: '#fff',
+                          fontSize: '20px',
+                          cursor: 'pointer',
+                          flexShrink: 0
+                        }}
+                      >
+                        +
+                      </button>
                     )}
                   </div>
                 </div>
