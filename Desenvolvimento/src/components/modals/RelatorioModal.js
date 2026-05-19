@@ -106,6 +106,20 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {}, PAG = {} }) {
     janela.document.close();
   };
 
+  const formatarEndereco = (endereco) => {
+    if (!endereco) return 'Não informado';
+    if (typeof endereco === 'string') return endereco || 'Não informado';
+    const partes = [
+      endereco.logradouro,
+      endereco.numero ? `nº ${endereco.numero}` : null,
+      endereco.complemento || null,
+      endereco.bairro || null,
+      endereco.cidade && endereco.estado ? `${endereco.cidade}/${endereco.estado}` : endereco.cidade || endereco.estado || null,
+      endereco.cep ? `CEP: ${endereco.cep}` : null
+    ].filter(Boolean);
+    return partes.length > 0 ? partes.join(', ') : 'Não informado';
+  };
+
   const gerarHTMLRelatorio = (cliente, pedidos, financeiro, recebimentos) => {
     const recebimentosHtml =
       recebimentos.length === 0
@@ -196,7 +210,7 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {}, PAG = {} }) {
     <div class="info-linha"><span class="info-label">Nome</span><span class="info-valor">${cliente.nome}</span></div>
     <div class="info-linha"><span class="info-label">Telefone</span><span class="info-valor">${cliente.telefone || cliente.whatsapp || 'Não informado'}</span></div>
     <div class="info-linha"><span class="info-label">E-mail</span><span class="info-valor">${cliente.email || 'Não informado'}</span></div>
-    <div class="info-linha"><span class="info-label">Endereço</span><span class="info-valor">${cliente.endereco || 'Não informado'}</span></div>
+    <div class="info-linha"><span class="info-label">Endereço</span><span class="info-valor">${formatarEndereco(cliente.endereco)}</span></div>
   </div>
 
   <div class="resumo">
@@ -364,7 +378,7 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {}, PAG = {} }) {
     </div>
     <div class="info-linha">
       <span class="info-label">Endereço:</span>
-      <span>${pedido.referencia || cliente.endereco || 'Não informado'}</span>
+      <span>${pedido.referencia || formatarEndereco(cliente.endereco)}</span>
     </div>
     <div class="info-linha">
       <span class="info-label">Telefone:</span>
