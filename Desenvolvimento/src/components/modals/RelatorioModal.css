@@ -66,9 +66,54 @@
   color: var(--text);
 }
 
-.card-valor.faturado { background: #eef2ff; }
-.card-valor.pago { background: #ecfdf5; }
-.card-valor.pendente { background: #fff7ed; }
+.card-valor.faturado {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+}
+.card-valor.pago {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+.card-valor.pendente {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+
+/* Modo escuro: substitui os fundos claros por versões escuras com borda colorida */
+@media (prefers-color-scheme: dark) {
+  .card-valor.faturado {
+    background: rgba(108, 99, 255, 0.12);
+    border: 1px solid rgba(108, 99, 255, 0.35);
+  }
+  .card-valor.pago {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+  }
+  .card-valor.pendente {
+    background: rgba(245, 166, 35, 0.12);
+    border: 1px solid rgba(245, 166, 35, 0.35);
+  }
+}
+
+/* Suporte ao atributo data-theme="dark" (caso o app controle o tema via JS) */
+[data-theme="dark"] .card-valor.faturado,
+.dark .card-valor.faturado,
+[class*="dark"] .card-valor.faturado {
+  background: rgba(108, 99, 255, 0.12);
+  border: 1px solid rgba(108, 99, 255, 0.35);
+}
+[data-theme="dark"] .card-valor.pago,
+.dark .card-valor.pago,
+[class*="dark"] .card-valor.pago {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+[data-theme="dark"] .card-valor.pendente,
+.dark .card-valor.pendente,
+[class*="dark"] .card-valor.pendente {
+  background: rgba(245, 166, 35, 0.12);
+  border: 1px solid rgba(245, 166, 35, 0.35);
+}
 
 .relatorio-acoes {
   display: flex;
