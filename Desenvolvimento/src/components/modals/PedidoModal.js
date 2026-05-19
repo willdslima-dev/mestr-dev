@@ -531,6 +531,16 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
     // Respeitar escolha do usuário: usar formData.status se definido, caso contrário padrão 'aguardando'
     pedido.status = formData.status || 'aguardando';
 
+    // Salva dataConclusao automaticamente quando status muda para concluido ou garantia
+    const statusAnterior = pedidoExistente?.status;
+    const statusAtual = pedido.status;
+    if ((statusAtual === 'concluido' || statusAtual === 'garantia') && !pedidoExistente?.dataConclusao) {
+      pedido.dataConclusao = hoje();
+    } else if (pedidoExistente?.dataConclusao) {
+      // Mantém a data de conclusão já registrada
+      pedido.dataConclusao = pedidoExistente.dataConclusao;
+    }
+
     console.log('💾 Salvando pedido:', { 
       id: pedido.id, 
       numero: pedido.numero, 
