@@ -211,33 +211,38 @@ function CalendarioComAgenda({ isOpen, onClose, onSelecionarData, dataSelecionad
         flexDirection: 'column', 
         height: 'auto',
         maxHeight: '90vh',
-        minHeight: '500px'
+        minHeight: '400px',
+        width: '100%'
       }}>
         {/* Calendário */}
         <div style={{ 
           flex: '0 0 auto', 
-          padding: '12px', 
+          padding: 'clamp(8px, 2vw, 12px)', 
           background: 'var(--bg2)', 
           borderRadius: '12px', 
-          marginBottom: '12px' 
+          marginBottom: '12px',
+          width: '100%',
+          maxWidth: '100%',
+          overflowX: 'hidden'
         }}>
           {/* Header do mês */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'clamp(8px, 2vw, 12px)' }}>
             <button
               onClick={mesAnterior}
               style={{
                 background: 'var(--bg3)',
                 border: '1px solid var(--border)',
                 borderRadius: '8px',
-                width: '36px',
-                height: '36px',
-                minWidth: '36px',
+                width: 'clamp(32px, 8vw, 40px)',
+                height: 'clamp(32px, 8vw, 40px)',
+                minWidth: '32px',
                 cursor: 'pointer',
                 color: 'var(--text)',
-                fontSize: '18px',
+                fontSize: 'clamp(16px, 4vw, 20px)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                touchAction: 'manipulation'
               }}
             >
               ‹
@@ -245,9 +250,12 @@ function CalendarioComAgenda({ isOpen, onClose, onSelecionarData, dataSelecionad
             
             <h3 style={{ 
               margin: 0, 
-              fontSize: 'clamp(14px, 4vw, 16px)', 
+              fontSize: 'clamp(13px, 3.5vw, 16px)', 
               color: 'var(--text)',
-              whiteSpace: 'nowrap'
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              padding: '0 8px'
             }}>
               {meses[mesAtual.getMonth()]} {mesAtual.getFullYear()}
             </h3>
@@ -258,15 +266,16 @@ function CalendarioComAgenda({ isOpen, onClose, onSelecionarData, dataSelecionad
                 background: 'var(--bg3)',
                 border: '1px solid var(--border)',
                 borderRadius: '8px',
-                width: '36px',
-                height: '36px',
-                minWidth: '36px',
+                width: 'clamp(32px, 8vw, 40px)',
+                height: 'clamp(32px, 8vw, 40px)',
+                minWidth: '32px',
                 cursor: 'pointer',
                 color: 'var(--text)',
-                fontSize: '18px',
+                fontSize: 'clamp(16px, 4vw, 20px)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                touchAction: 'manipulation'
               }}
             >
               ›
@@ -277,8 +286,8 @@ function CalendarioComAgenda({ isOpen, onClose, onSelecionarData, dataSelecionad
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(7, 1fr)', 
-            gap: '3px',
-            marginBottom: '6px',
+            gap: 'clamp(2px, 0.5vw, 4px)',
+            marginBottom: 'clamp(4px, 1vw, 6px)',
             width: '100%'
           }}>
             {diasSemana.map(dia => (
@@ -286,10 +295,11 @@ function CalendarioComAgenda({ isOpen, onClose, onSelecionarData, dataSelecionad
                 key={dia}
                 style={{
                   textAlign: 'center',
-                  fontSize: 'clamp(10px, 2.5vw, 12px)',
+                  fontSize: 'clamp(9px, 2vw, 12px)',
                   fontWeight: '600',
                   color: 'var(--muted)',
-                  padding: '4px 2px'
+                  padding: 'clamp(2px, 0.5vw, 4px)',
+                  overflow: 'hidden'
                 }}
               >
                 {dia}
@@ -301,7 +311,7 @@ function CalendarioComAgenda({ isOpen, onClose, onSelecionarData, dataSelecionad
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(7, 1fr)', 
-            gap: '3px',
+            gap: 'clamp(2px, 0.5vw, 4px)',
             width: '100%'
           }}>
             {diasDoMes.map((data, index) => (
@@ -312,7 +322,7 @@ function CalendarioComAgenda({ isOpen, onClose, onSelecionarData, dataSelecionad
                   width: '100%',
                   paddingBottom: '100%',
                   position: 'relative',
-                  borderRadius: '6px',
+                  borderRadius: 'clamp(4px, 1vw, 6px)',
                   cursor: data ? 'pointer' : 'default',
                   background: data 
                     ? ehSelecionado(data) 
@@ -322,7 +332,8 @@ function CalendarioComAgenda({ isOpen, onClose, onSelecionarData, dataSelecionad
                         : 'transparent'
                     : 'transparent',
                   border: ehHoje(data) && !ehSelecionado(data) ? '2px solid var(--accent)' : 'none',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  touchAction: 'manipulation'
                 }}
               >
                 {data && (
@@ -336,16 +347,16 @@ function CalendarioComAgenda({ isOpen, onClose, onSelecionarData, dataSelecionad
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: ehSelecionado(data) ? '#fff' : 'var(--text)',
-                    fontSize: 'clamp(11px, 2.8vw, 14px)',
+                    fontSize: 'clamp(10px, 2.5vw, 14px)',
                     fontWeight: ehHoje(data) ? '600' : '400'
                   }}>
                     {data.getDate()}
                     {temCompromissoNoDia(data) && (
                       <div style={{
                         position: 'absolute',
-                        bottom: '3px',
-                        width: '4px',
-                        height: '4px',
+                        bottom: 'clamp(2px, 0.5vw, 3px)',
+                        width: 'clamp(3px, 0.8vw, 4px)',
+                        height: 'clamp(3px, 0.8vw, 4px)',
                         borderRadius: '50%',
                         background: ehSelecionado(data) ? '#fff' : 'var(--accent)'
                       }} />

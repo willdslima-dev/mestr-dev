@@ -3,6 +3,7 @@
 // ============================================
 
 import { uid } from './helpers';
+import { servicosSINAPI, obterMateriaisDoServico } from './sinapi';
 
 // ============================================
 // CLIENTES DE TESTE - COM ENDEREÇOS REAIS
@@ -409,6 +410,9 @@ export const gerarPedidosAleatorios = (clientes) => {
   const ano = new Date().getFullYear();
   let proximoNum = 1;
 
+  // Converte servicosSINAPI em array para facilitar seleção aleatória
+  const servicosSINAPIArray = Object.values(servicosSINAPI);
+
   Object.entries(clientes).forEach(([clienteId, cliente], index) => {
     // Cada cliente terá de 1 a 3 pedidos
     const numPedidos = Math.floor(Math.random() * 3) + 1;
@@ -416,31 +420,72 @@ export const gerarPedidosAleatorios = (clientes) => {
     for (let i = 0; i < numPedidos; i++) {
       const pedidoId = uid();
       
+      // 70% chance de usar serviços SINAPI, 30% serviços personalizados
+      const usarSINAPI = Math.random() > 0.3;
+      
       // Seleciona serviços aleatórios (1 a 3)
       const numServicos = Math.floor(Math.random() * 3) + 1;
       const servicos = [];
+      const materiaisGerados = [];
+      
       for (let j = 0; j < numServicos; j++) {
-        const servico = servicosExemplo[Math.floor(Math.random() * servicosExemplo.length)];
-        servicos.push({
-          id: uid(),
-          nome: servico.nome,
-          valorUnitario: servico.valorUnitario,
-          quantidade: servico.quantidade
-        });
+        if (usarSINAPI && servicosSINAPIArray.length > 0) {
+          // Serviço SINAPI
+          const servicoSINAPI = servicosSINAPIArray[Math.floor(Math.random() * servicosSINAPIArray.length)];
+          const quantidade = Math.floor(Math.random() * 50) + 10; // 10 a 60 m² ou unidades
+          
+          const servico = {
+            id: uid(),
+            nome: servicoSINAPI.descricao.substring(0, 60) + (servicoSINAPI.descricao.length > 60 ? '...' : ''),
+            descricao: servicoSINAPI.descricao,
+            valorUnitario: servicoSINAPI.custoUnitario,
+            quantidade: quantidade,
+            unidadeMedida: servicoSINAPI.unidade,
+            origem: 'SINAPI',
+            codigoSINAPI: servicoSINAPI.codigo,
+            insumos: servicoSINAPI.insumos
+          };
+          servicos.push(servico);
+          
+          // Gera materiais automaticamente desse serviço
+          const materiaisDoServico = obterMateriaisDoServico(servicoSINAPI, quantidade);
+          materiaisDoServico.forEach(mat => {
+            materiaisGerados.push({
+              ...mat,
+              id: uid(),
+              editavel: true
+            });
+          });
+        } else {
+          // Serviço personalizado
+          const servico = servicosExemplo[Math.floor(Math.random() * servicosExemplo.length)];
+          servicos.push({
+            id: uid(),
+            nome: servico.nome,
+            valorUnitario: servico.valorUnitario,
+            quantidade: servico.quantidade,
+            origem: 'personalizado'
+          });
+        }
       }
 
-      // Seleciona materiais aleatórios (2 a 5)
-      const numMateriais = Math.floor(Math.random() * 4) + 2;
-      const materiais = [];
-      for (let k = 0; k < numMateriais; k++) {
-        const material = materiaisExemplo[Math.floor(Math.random() * materiaisExemplo.length)];
-        materiais.push({
-          id: uid(),
-          nome: material.nome,
-          valorUnitario: material.valorUnitario,
-          quantidade: Math.floor(Math.random() * 10) + 1
-        });
-      }
+      // Se não gerou materiais do SINAPI, adiciona alguns materiais manuais
+      const materiais = materiaisGerados.length > 0 ? materiaisGerados : (() => {
+        const numMateriais = Math.floor(Math.random() * 4) + 2;
+        const mats = [];
+        for (let k = 0; k < numMateriais; k++) {
+          const material = materiaisExemplo[Math.floor(Math.random() * materiaisExemplo.length)];
+          mats.push({
+            id: uid(),
+            nome: material.nome,
+            valorUnitario: material.valorUnitario,
+            quantidade: Math.floor(Math.random() * 10) + 1,
+            unidadeMedida: 'un',
+            origem: 'manual'
+          });
+        }
+        return mats;
+      })();
 
       // Calcula valores
       // const totalServicos = servicos.reduce((sum, s) => sum + (s.valorUnitario * s.quantidade), 0);

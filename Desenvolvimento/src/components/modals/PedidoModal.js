@@ -2,18 +2,20 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Modal from './Modal';
 import DescontoModal from './DescontoModal';
 import SelecionarClienteModal from './SelecionarClienteModal';
-import SelecionarServicoModal from './SelecionarServicoModal';
+import SelecionarServicoModalSINAPI from './SelecionarServicoModalSINAPI';
 import MaterialModal from './MaterialModal';
 import PagamentoModal from './PagamentoModal';
 import CustoModal from './CustoModal';
+import RelatorioModal from './RelatorioModal';
 import CalendarioComAgenda from './CalendarioComAgenda';
 import TimePickerClock from './TimePickerClock';
 import PaymentMethodSelector from './PaymentMethodSelector';
 import StatusSelector from './StatusSelector';
 import { uid, hoje } from '../../utils/helpers';
 import { formatarMoeda } from '../../infrastructure/formatters';
+import { obterMateriaisDoServico } from '../../utils/sinapi';
 
-function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AGENDA, pedidoExistente, CLI, setCLI }) {
+function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, PAG, AGENDA, pedidoExistente, CLI, setCLI }) {
   const [clienteSelecionado, setClienteSelecionado] = useState(clienteInicial || null);
   const [showClienteModal, setShowClienteModal] = useState(false);
   
@@ -88,6 +90,7 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
   const [modalPagamento, setModalPagamento] = useState({ isOpen: false, editando: null });
   const [modalCusto, setModalCusto] = useState({ isOpen: false, editando: null });
   const [modalDesconto, setModalDesconto] = useState({ isOpen: false });
+  const [modalRelatorio, setModalRelatorio] = useState(false);
   
   // Estados dos calendários
   const [calendarioAberto, setCalendarioAberto] = useState(null); // 'validade', 'prazo', null
@@ -299,7 +302,28 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
   */
 
   const handleAdicionarServico = (servico) => {
+    // Adiciona o serviço
     updateFormData('servicos', [...formData.servicos, servico]);
+    
+    // Se o serviço veio do SINAPI e tem origem/codigoSINAPI, adiciona materiais automaticamente
+    if (servico.origem === 'SINAPI' && servico.codigoSINAPI) {
+      const materiaisDoServico = obterMateriaisDoServico(
+        { codigo: servico.codigoSINAPI, insumos: servico.insumos },
+        servico.quantidade
+      );
+      
+      if (materiaisDoServico && materiaisDoServico.length > 0) {
+        // Adiciona os materiais com IDs únicos
+        const materiaisComId = materiaisDoServico.map(material => ({
+          ...material,
+          id: uid(),
+          editavel: true // Marca como editável para poder ajustar/excluir depois
+        }));
+        
+        updateFormData('materiais', [...formData.materiais, ...materiaisComId]);
+      }
+    }
+    
     setModalSelecionarServico(false);
   };
 
@@ -963,6 +987,27 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
       >
         Cancelar
       </button>
+      
+      <button
+        onClick={() => setModalRelatorio(true)}
+        disabled={!clienteSelecionado}
+        style={{
+          padding: '12px 24px',
+          background: clienteSelecionado ? 'var(--bg3)' : 'var(--bg2)',
+          border: clienteSelecionado ? '1px solid var(--accent)' : '1px solid var(--border)',
+          borderRadius: '8px',
+          color: clienteSelecionado ? 'var(--accent)' : 'var(--muted)',
+          fontSize: '14px',
+          fontWeight: '600',
+          cursor: clienteSelecionado ? 'pointer' : 'not-allowed',
+          transition: 'all 0.2s',
+          opacity: clienteSelecionado ? 1 : 0.5
+        }}
+        title={!clienteSelecionado ? 'Selecione um cliente primeiro' : 'Gerar relatório deste pedido'}
+      >
+        📄 Relatório
+      </button>
+      
       <button
         onClick={handleSalvarPedido}
         style={{
@@ -1517,23 +1562,94 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                   <div style={{ marginBottom: '12px', marginLeft: '28px' }}>
                     {formData.servicos.map((servico, idx) => (
                       <div key={idx} style={{
-                        padding: '8px',
-                        marginBottom: '6px',
+                        padding: '12px',
+                        marginBottom: '8px',
                         background: 'var(--bg3)',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        fontSize: '13px'
                       }}>
-                        <div>
-                          <div style={{ fontWeight: '600' }}>{servico.nome}</div>
-                          <div style={{ color: 'var(--muted)', marginTop: '2px' }}>
-                            {servico.quantidade}x R$ {(servico.valorUnitario || servico.preco || 0).toFixed(2).replace('.', ',')}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: '600', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {servico.nome}
+                              {servico.origem === 'SINAPI' && (
+                                <span style={{
+                                  fontSize: '10px',
+                                  padding: '2px 6px',
+                                  background: 'var(--accent)20',
+                                  color: 'var(--accent)',
+                                  borderRadius: '4px',
+                                  fontWeight: '500'
+                                }}>
+                                  SINAPI
+                                </span>
+                              )}
+                            </div>
+                            {servico.descricao && (
+                              <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '6px' }}>
+                                {servico.descricao}
+                              </div>
+                            )}
+                            <div style={{ color: 'var(--muted)', fontSize: '12px', marginBottom: '6px' }}>
+                              {servico.quantidade} {servico.unidadeMedida || 'un'} × R$ {(servico.valorUnitario || servico.preco || 0).toFixed(2).replace('.', ',')}
+                            </div>
+                            <div style={{ fontWeight: '600', color: 'var(--accent)', fontSize: '14px' }}>
+                              Total: R$ {((servico.valorUnitario || servico.preco || 0) * servico.quantidade).toFixed(2).replace('.', ',')}
+                            </div>
                           </div>
-                        </div>
-                        <div style={{ fontWeight: '600', color: 'var(--accent)' }}>
-                          R$ {((servico.valorUnitario || servico.preco || 0) * servico.quantidade).toFixed(2).replace('.', ',')}
+                          
+                          {/* Botões de Ação */}
+                          <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
+                            <button
+                              onClick={() => {
+                                // Abre modal de serviço em modo edição
+                                setModalSelecionarServico(true);
+                                // TODO: Implementar edição de serviço
+                              }}
+                              title="Editar serviço"
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                background: 'var(--accent)',
+                                border: 'none',
+                                borderRadius: '6px',
+                                color: '#fff',
+                                fontSize: '14px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              ✏️
+                            </button>
+                            
+                            <button
+                              onClick={() => {
+                                if (window.confirm('Excluir este serviço? Os materiais vinculados serão mantidos.')) {
+                                  const novosServicos = formData.servicos.filter((_, i) => i !== idx);
+                                  updateFormData('servicos', novosServicos);
+                                }
+                              }}
+                              title="Excluir serviço"
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                background: '#dc3545',
+                                border: 'none',
+                                borderRadius: '6px',
+                                color: '#fff',
+                                fontSize: '14px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              🗑️
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1589,39 +1705,121 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                 {/* Lista de materiais */}
                 {formData.materiais.length > 0 && (
                   <div style={{ marginBottom: '12px', marginLeft: '28px' }}>
-                    {formData.materiais.map((material, idx) => (
-                      <div key={idx} style={{
-                        padding: '8px',
-                        marginBottom: '6px',
-                        background: 'var(--bg3)',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}>
-                        <div>
-                          <div style={{ fontWeight: '600' }}>{material.nome}</div>
-                          <div style={{ color: 'var(--muted)', marginTop: '2px' }}>
-                            {material.quantidade}x R$ {(material.valorUnitario || 0).toFixed(2).replace('.', ',')}
+                    {formData.materiais.map((material, idx) => {
+                      // Encontra o serviço que gerou este material
+                      const servicoOrigem = material.codigoServico 
+                        ? formData.servicos.find(s => s.codigoSINAPI === material.codigoServico)
+                        : null;
+                      
+                      return (
+                        <div key={idx} style={{
+                          padding: '12px',
+                          marginBottom: '8px',
+                          background: 'var(--bg3)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '8px',
+                          fontSize: '13px'
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: '600', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                {material.nome}
+                                {material.origem === 'SINAPI' && (
+                                  <span style={{
+                                    fontSize: '10px',
+                                    padding: '2px 6px',
+                                    background: 'var(--accent)20',
+                                    color: 'var(--accent)',
+                                    borderRadius: '4px',
+                                    fontWeight: '500'
+                                  }}>
+                                    SINAPI
+                                  </span>
+                                )}
+                              </div>
+                              
+                              {/* Subtítulo: De qual serviço veio */}
+                              {servicoOrigem && (
+                                <div style={{ 
+                                  fontSize: '11px', 
+                                  color: 'var(--muted)', 
+                                  marginBottom: '4px',
+                                  fontStyle: 'italic'
+                                }}>
+                                  📋 {servicoOrigem.nome.substring(0, 50)}{servicoOrigem.nome.length > 50 ? '...' : ''}
+                                </div>
+                              )}
+                              
+                              <div style={{ color: 'var(--muted)', fontSize: '12px', marginBottom: '6px' }}>
+                                {material.quantidade} {material.unidadeMedida} × R$ {(material.valorUnitario || 0).toFixed(2).replace('.', ',')}
+                              </div>
+                              <div style={{ fontWeight: '600', color: 'var(--accent)', fontSize: '14px' }}>
+                                Total: R$ {((material.valorUnitario || 0) * material.quantidade).toFixed(2).replace('.', ',')}
+                              </div>
+                            </div>
+                            
+                            {/* Botões de Ação */}
+                            <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
+                              <button
+                                onClick={() => setModalMaterial({ isOpen: true, editando: material })}
+                                title="Editar material"
+                                style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  background: 'var(--accent)',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  color: '#fff',
+                                  fontSize: '14px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
+                              >
+                                ✏️
+                              </button>
+                              
+                              <button
+                                onClick={() => {
+                                  if (window.confirm('Excluir este material?')) {
+                                    const novosMateriais = formData.materiais.filter((_, i) => i !== idx);
+                                    updateFormData('materiais', novosMateriais);
+                                  }
+                                }}
+                                title="Excluir material"
+                                style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  background: '#dc3545',
+                                  border: 'none',
+                                  borderRadius: '6px',
+                                  color: '#fff',
+                                  fontSize: '14px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </div>
                         </div>
-                        <div style={{ fontWeight: '600', color: 'var(--accent)' }}>
-                          R$ {((material.valorUnitario || 0) * material.quantidade).toFixed(2).replace('.', ',')}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
                 {/* Desconto */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ fontSize: '13px', color: 'var(--text)', fontWeight: '600' }}>Desconto</div>
-                      <div style={{ fontSize: '14px', color: formData.desconto ? 'var(--accent)' : 'var(--muted)' }}>
-                        {formData.desconto === '' || formData.desconto === null || formData.desconto === undefined ? '_' : formatarMoeda(formData.desconto)}
-                      </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
+                      Desconto
+                    </label>
+                    <div style={{ fontSize: '14px', color: formData.desconto ? 'var(--accent)' : 'var(--muted)', fontWeight: '600' }}>
+                      {formData.desconto && formData.desconto > 0 ? formatarMoeda(formData.desconto) : '—'}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginTop: '26px' }}>
@@ -1637,11 +1835,13 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        transition: 'all 0.3s ease'
                       }}
                       onClick={() => setModalDesconto({ isOpen: true })}
+                      title={formData.desconto && formData.desconto > 0 ? "Editar desconto" : "Adicionar desconto"}
                     >
-                      +
+                      {formData.desconto && formData.desconto > 0 ? '✏️' : '+'}
                     </button>
                     {formData.desconto && formData.desconto > 0 && (
                       <button
@@ -1659,7 +1859,7 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                           justifyContent: 'center',
                           transition: 'all 0.3s ease'
                         }}
-                        onClick={() => updateFormData('desconto', '')}
+                        onClick={() => updateFormData('desconto', 0)}
                         title="Remover desconto"
                       >
                         ✕
@@ -1668,21 +1868,22 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                   </div>
                 </div>
 
-                {/* Taxa de entrega - só mostra input se já tiver valor ou se usuário clicou + */}
+                {/* Taxa de entrega */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
                       Taxa de entrega (R$)
                     </label>
-                    {(formData.taxaEntrega > 0 || showTaxaEntregaEditor) && (
+                    {showTaxaEntregaEditor ? (
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <input
                           type="number"
-                          value={formData.taxaEntrega}
+                          value={formData.taxaEntrega || ''}
                           onChange={(e) => updateFormData('taxaEntrega', parseFloat(e.target.value) || 0)}
                           placeholder="0,00"
                           step="0.01"
                           min="0"
+                          autoFocus
                           style={{
                             flex: 1,
                             padding: '10px 12px',
@@ -1693,50 +1894,97 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                             fontSize: '14px'
                           }}
                         />
-                        <button onClick={() => { updateFormData('taxaEntrega', taxaEntregaPrev || 0); setShowTaxaEntregaEditor(false); }} style={{ padding: '8px 10px', borderRadius: '8px', background: '#6c757d', color: '#fff', border: 'none' }}>✕</button>
-                        <button onClick={() => setShowTaxaEntregaEditor(false)} style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--accent)', color: '#fff', border: 'none' }}>✔</button>
+                        <button 
+                          onClick={() => { 
+                            updateFormData('taxaEntrega', taxaEntregaPrev || 0); 
+                            setShowTaxaEntregaEditor(false); 
+                          }} 
+                          style={{ padding: '8px 10px', borderRadius: '8px', background: '#6c757d', color: '#fff', border: 'none', cursor: 'pointer' }}
+                        >
+                          ✕
+                        </button>
+                        <button 
+                          onClick={() => setShowTaxaEntregaEditor(false)} 
+                          style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--accent)', color: '#fff', border: 'none', cursor: 'pointer' }}
+                        >
+                          ✔
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '14px', color: formData.taxaEntrega ? 'var(--accent)' : 'var(--muted)', fontWeight: '600' }}>
+                        {formData.taxaEntrega && formData.taxaEntrega > 0 ? formatarMoeda(formData.taxaEntrega) : '—'}
                       </div>
                     )}
                   </div>
-                  <button
-                    style={{
-                      marginTop: (formData.taxaEntrega > 0 || showTaxaEntregaEditor) ? '0' : '26px',
-                      width: '40px',
-                      height: '40px',
-                      background: 'var(--accent)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      color: '#fff',
-                      fontSize: '20px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    onClick={() => {
-                      setTaxaEntregaPrev(formData.taxaEntrega || 0);
-                      setShowTaxaEntregaEditor(true);
-                    }}
-                  >
-                    +
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginTop: showTaxaEntregaEditor ? '0' : '26px' }}>
+                    {!showTaxaEntregaEditor && (
+                      <>
+                        <button
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            background: 'var(--accent)',
+                            border: 'none',
+                            borderRadius: '50%',
+                            color: '#fff',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.3s ease'
+                          }}
+                          onClick={() => {
+                            setTaxaEntregaPrev(formData.taxaEntrega || 0);
+                            setShowTaxaEntregaEditor(true);
+                          }}
+                          title={formData.taxaEntrega && formData.taxaEntrega > 0 ? "Editar taxa" : "Adicionar taxa"}
+                        >
+                          {formData.taxaEntrega && formData.taxaEntrega > 0 ? '✏️' : '+'}
+                        </button>
+                        {formData.taxaEntrega && formData.taxaEntrega > 0 && (
+                          <button
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              background: '#dc3545',
+                              border: 'none',
+                              borderRadius: '50%',
+                              color: '#fff',
+                              fontSize: '20px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.3s ease'
+                            }}
+                            onClick={() => updateFormData('taxaEntrega', 0)}
+                            title="Remover taxa"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
 
-                {/* Outras taxas - só mostra input se já tiver valor ou se usuário clicou + */}
+                {/* Outras taxas */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                   <div style={{ flex: 1 }}>
                     <label style={{ fontSize: '13px', color: 'var(--text)', display: 'block', marginBottom: '6px' }}>
                       Outras taxas (R$)
                     </label>
-                    {(formData.outrasTaxas > 0 || showOutrasTaxasEditor) && (
+                    {showOutrasTaxasEditor ? (
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <input
                           type="number"
-                          value={formData.outrasTaxas}
+                          value={formData.outrasTaxas || ''}
                           onChange={(e) => updateFormData('outrasTaxas', parseFloat(e.target.value) || 0)}
                           placeholder="0,00"
                           step="0.01"
                           min="0"
+                          autoFocus
                           style={{
                             flex: 1,
                             padding: '10px 12px',
@@ -1747,33 +1995,79 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
                             fontSize: '14px'
                           }}
                         />
-                        <button onClick={() => { updateFormData('outrasTaxas', outrasTaxasPrev || 0); setShowOutrasTaxasEditor(false); }} style={{ padding: '8px 10px', borderRadius: '8px', background: '#6c757d', color: '#fff', border: 'none' }}>✕</button>
-                        <button onClick={() => setShowOutrasTaxasEditor(false)} style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--accent)', color: '#fff', border: 'none' }}>✔</button>
+                        <button 
+                          onClick={() => { 
+                            updateFormData('outrasTaxas', outrasTaxasPrev || 0); 
+                            setShowOutrasTaxasEditor(false); 
+                          }} 
+                          style={{ padding: '8px 10px', borderRadius: '8px', background: '#6c757d', color: '#fff', border: 'none', cursor: 'pointer' }}
+                        >
+                          ✕
+                        </button>
+                        <button 
+                          onClick={() => setShowOutrasTaxasEditor(false)} 
+                          style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--accent)', color: '#fff', border: 'none', cursor: 'pointer' }}
+                        >
+                          ✔
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '14px', color: formData.outrasTaxas ? 'var(--accent)' : 'var(--muted)', fontWeight: '600' }}>
+                        {formData.outrasTaxas && formData.outrasTaxas > 0 ? formatarMoeda(formData.outrasTaxas) : '—'}
                       </div>
                     )}
                   </div>
-                  <button
-                    style={{
-                      marginTop: (formData.outrasTaxas > 0 || showOutrasTaxasEditor) ? '0' : '26px',
-                      width: '40px',
-                      height: '40px',
-                      background: 'var(--accent)',
-                      border: 'none',
-                      borderRadius: '50%',
-                      color: '#fff',
-                      fontSize: '20px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                    onClick={() => {
-                      setOutrasTaxasPrev(formData.outrasTaxas || 0);
-                      setShowOutrasTaxasEditor(true);
-                    }}
-                  >
-                    +
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginTop: showOutrasTaxasEditor ? '0' : '26px' }}>
+                    {!showOutrasTaxasEditor && (
+                      <>
+                        <button
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            background: 'var(--accent)',
+                            border: 'none',
+                            borderRadius: '50%',
+                            color: '#fff',
+                            fontSize: '20px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.3s ease'
+                          }}
+                          onClick={() => {
+                            setOutrasTaxasPrev(formData.outrasTaxas || 0);
+                            setShowOutrasTaxasEditor(true);
+                          }}
+                          title={formData.outrasTaxas && formData.outrasTaxas > 0 ? "Editar taxas" : "Adicionar taxas"}
+                        >
+                          {formData.outrasTaxas && formData.outrasTaxas > 0 ? '✏️' : '+'}
+                        </button>
+                        {formData.outrasTaxas && formData.outrasTaxas > 0 && (
+                          <button
+                            style={{
+                              width: '40px',
+                              height: '40px',
+                              background: '#dc3545',
+                              border: 'none',
+                              borderRadius: '50%',
+                              color: '#fff',
+                              fontSize: '20px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.3s ease'
+                            }}
+                            onClick={() => updateFormData('outrasTaxas', 0)}
+                            title="Remover taxas"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 {/* Total */}
@@ -2135,7 +2429,7 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
       />
 
       {/* Modals de adicionar itens */}
-      <SelecionarServicoModal
+      <SelecionarServicoModalSINAPI
         isOpen={modalSelecionarServico}
         onClose={() => setModalSelecionarServico(false)}
         onAdicionarServico={handleAdicionarServico}
@@ -2168,6 +2462,16 @@ function PedidoModal({ isOpen, onClose, cliente: clienteInicial, ORC, setORC, AG
         onClose={() => setModalCusto({ isOpen: false, editando: null })}
         onSalvar={handleSalvarCusto}
         custoEditando={modalCusto.editando}
+      />
+
+      {/* Modal Relatório */}
+      <RelatorioModal
+        isOpen={modalRelatorio}
+        onClose={() => setModalRelatorio(false)}
+        cliente={clienteSelecionado}
+        ORC={ORC}
+        PAG={PAG}
+        pedidoInicial={pedidoExistente || (formData.id ? { ...formData, clienteId: clienteSelecionado?.id } : null)}
       />
 
       {/* Modal Calendário - Validade */}

@@ -371,6 +371,7 @@ function App() {
         setCLI={setCLI}
         ORC={ORC}
         setORC={setORC}
+        PAG={PAG}
         AGENDA={AGENDA}
       />
       <PedidosModal

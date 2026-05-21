@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Modal from './Modal';
 import {
   calcularValorPedido,
@@ -8,14 +8,39 @@ import {
 } from '../../utils/pagamentoSync';
 import './RelatorioModal.css';
 
-function RelatorioModal({ isOpen, onClose, cliente, ORC = {}, PAG = {} }) {
+function RelatorioModal({ isOpen, onClose, cliente, ORC = {}, PAG = {}, pedidoInicial = null }) {
   const [abaAtiva, setAbaAtiva] = useState('faturamento'); // 'faturamento' ou 'orcamento'
-  const [pedidoSelecionado, setPedidoSelecionado] = useState(null);
+  const [pedidoSelecionado, setPedidoSelecionado] = useState(pedidoInicial);
+  
+  // Seleção múltipla de pedidos
+  const [pedidosSelecionados, setPedidosSelecionados] = useState([]);
 
-  // Filtra pedidos do cliente
-  const pedidosCliente = cliente 
-    ? Object.values(ORC).filter(p => p.clienteId === cliente.id)
-    : [];
+  // Atualiza pedido selecionado quando pedidoInicial mudar
+  useEffect(() => {
+    if (pedidoInicial) {
+      setPedidoSelecionado(pedidoInicial);
+      setPedidosSelecionados([pedidoInicial]); // Marca o pedido inicial
+      setAbaAtiva('orcamento'); // Muda para aba orçamento quando vem de um pedido
+    }
+  }, [pedidoInicial, isOpen]);
+
+  // Filtra pedidos do cliente e ordena (pedido inicial no topo)
+  const pedidosCliente = useMemo(() => {
+    if (!cliente) return [];
+    
+    const pedidos = Object.values(ORC).filter(p => p.clienteId === cliente.id);
+    
+    // Se tem pedido inicial, coloca ele no topo
+    if (pedidoInicial && pedidoInicial.id) {
+      return pedidos.sort((a, b) => {
+        if (a.id === pedidoInicial.id) return -1;
+        if (b.id === pedidoInicial.id) return 1;
+        return 0;
+      });
+    }
+    
+    return pedidos;
+  }, [cliente, ORC, pedidoInicial]);
 
   const recebimentosCliente = useMemo(() => {
     if (!cliente) return [];
@@ -55,6 +80,64 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {}, PAG = {} }) {
     concluido: { label: 'Concluído', cor: '#10b981', icon: '✓' },
     garantia: { label: 'Garantia', cor: '#10b981', icon: '🛡️' },
     cancelado: { label: 'Cancelado', cor: '#f06070', icon: '✕' }
+  };
+
+  // Toggle de seleção múltipla
+  const handleTogglePedido = (pedido) => {
+    const jaEstaSelecionado = pedidosSelecionados.find(p => p.id === pedido.id);
+    
+    if (jaEstaSelecionado) {
+      setPedidosSelecionados(pedidosSelecionados.filter(p => p.id !== pedido.id));
+    } else {
+      setPedidosSelecionados([...pedidosSelecionados, pedido]);
+    }
+  };
+
+  // Gerar PDF de múltiplos pedidos
+  const handleGerarPDFMultiplos = () => {
+    if (pedidosSelecionados.length === 0) {
+      alert('Selecione pelo menos um pedido');
+      return;
+    }
+
+    if (pedidosSelecionados.length === 1) {
+      // Se só tem 1, gera orçamento normal
+      handleGerarPDF(pedidosSelecionados[0]);
+    } else {
+      // Se tem mais de 1, gera orçamento consolidado
+      const html = gerarHTMLOrcamentoMultiplo(pedidosSelecionados, cliente);
+      abrirEmJanela(html, `Orcamento_Multiplo_${cliente.nome.replace(/\W/g, '_')}.pdf`);
+    }
+  };
+
+  // Compartilhar múltiplos pedidos no WhatsApp
+  const handleCompartilharWhatsappMultiplos = () => {
+    if (pedidosSelecionados.length === 0) {
+      alert('Selecione pelo menos um pedido');
+      return;
+    }
+
+    const numeroWhatsapp = cliente.whatsapp?.replace(/\D/g, '') || cliente.telefone?.replace(/\D/g, '');
+    if (!numeroWhatsapp) {
+      alert('Número de WhatsApp/telefone do cliente não informado.');
+      return;
+    }
+
+    let mensagem = `Olá ${cliente.nome}! 👋\n\nSegue o orçamento dos pedidos solicitados:\n\n`;
+    
+    pedidosSelecionados.forEach((pedido, idx) => {
+      const valorPedido = calcularValorPedido(pedido);
+      mensagem += `*Pedido ${idx + 1}: Nº ${pedido.numero}*\n`;
+      mensagem += `📍 ${pedido.referencia || 'Sem referência'}\n`;
+      mensagem += `💰 Valor: R$ ${valorPedido.toFixed(2).replace('.', ',')}\n\n`;
+    });
+
+    const totalGeral = pedidosSelecionados.reduce((sum, p) => sum + calcularValorPedido(p), 0);
+    mensagem += `*TOTAL GERAL: R$ ${totalGeral.toFixed(2).replace('.', ',')}*\n\n`;
+    mensagem += `Qualquer dúvida, estou à disposição! 😊`;
+
+    const url = `https://wa.me/55${numeroWhatsapp}?text=${encodeURIComponent(mensagem)}`;
+    window.open(url, '_blank');
   };
 
   const handleGerarPDF = (pedido) => {
@@ -431,8 +514,8 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {}, PAG = {} }) {
         <tbody>
           ${pedido.materiais.map(m => `
             <tr>
-              <td>${m.descricao}</td>
-              <td style="text-align: center;">${m.quantidade || 1}</td>
+              <td>${m.nome || m.descricao}</td>
+              <td style="text-align: center;">${m.quantidade || 1} ${m.unidadeMedida || ''}</td>
               <td style="text-align: right;">R$ ${((m.valorUnitario || 0).toFixed(2)).replace('.', ',')}</td>
               <td style="text-align: right;">R$ ${(((m.valorUnitario || 0) * (m.quantidade || 1)).toFixed(2)).replace('.', ',')}</td>
             </tr>
@@ -456,6 +539,168 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {}, PAG = {} }) {
     <div class="totalizador-linha valor-final">
       <span>Valor Total:</span>
       <strong>R$ ${valorTotal.toFixed(2).replace('.', ',')}</strong>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Documento gerado automaticamente pelo Mestre.IA</p>
+    <p>Válido por 30 dias</p>
+  </div>
+</body>
+</html>
+    `;
+  };
+
+  const gerarHTMLOrcamentoMultiplo = (pedidos, cliente) => {
+    const totalGeral = pedidos.reduce((acc, pedido) => {
+      const totalServicos = (pedido.servicos || []).reduce((a, s) => a + ((s.valorUnitario || 0) * (s.quantidade || 1)), 0);
+      const totalMateriais = (pedido.materiais || []).reduce((a, m) => a + ((m.valorUnitario || 0) * (m.quantidade || 1)), 0);
+      const desconto = pedido.desconto || 0;
+      return acc + (totalServicos + totalMateriais - desconto);
+    }, 0);
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Orçamento Múltiplo - ${cliente.nome}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 40px;
+      color: #333;
+      background: white;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid #6c63ff;
+    }
+    .header h1 { font-size: 32px; color: #6c63ff; margin-bottom: 5px; }
+    .cliente-info {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+    .pedido-section {
+      margin: 30px 0;
+      padding: 20px;
+      border: 2px solid #6c63ff;
+      border-radius: 8px;
+      page-break-inside: avoid;
+    }
+    .pedido-section h3 {
+      color: #6c63ff;
+      margin-bottom: 15px;
+      font-size: 20px;
+    }
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    th { background: #6c63ff; color: white; padding: 10px; text-align: left; font-size: 13px; }
+    td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+    .totalizador { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 8px; }
+    .totalizador-linha { display: flex; justify-content: space-between; padding: 8px 0; font-size: 15px; }
+    .valor-final { font-size: 20px; color: #6c63ff; border-top: 2px solid #6c63ff; padding-top: 12px; margin-top: 8px; }
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Orçamento Múltiplo</h1>
+    <p>${cliente.nome} • ${cliente.telefone || cliente.whatsapp || ''}</p>
+  </div>
+
+  <div class="cliente-info">
+    <h3>📋 ${pedidos.length} Pedido(s) Selecionado(s)</h3>
+  </div>
+
+  ${pedidos.map((pedido, idx) => {
+    const totalServicos = (pedido.servicos || []).reduce((a, s) => a + ((s.valorUnitario || 0) * (s.quantidade || 1)), 0);
+    const totalMateriais = (pedido.materiais || []).reduce((a, m) => a + ((m.valorUnitario || 0) * (m.quantidade || 1)), 0);
+    const subtotal = totalServicos + totalMateriais;
+    const desconto = pedido.desconto || 0;
+    const valorTotal = subtotal - desconto;
+
+    return `
+      <div class="pedido-section">
+        <h3>Pedido ${idx + 1}: Nº ${pedido.numero}</h3>
+        <p><strong>Referência:</strong> ${pedido.referencia || 'Sem referência'}</p>
+        
+        ${pedido.servicos && pedido.servicos.length > 0 ? `
+          <h4 style="margin-top: 15px; color: #333;">🔧 Serviços</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th style="text-align: center;">Qtd</th>
+                <th style="text-align: right;">Valor Unit.</th>
+                <th style="text-align: right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pedido.servicos.map(s => `
+                <tr>
+                  <td>${s.nome || s.descricao}</td>
+                  <td style="text-align: center;">${s.quantidade || 1}</td>
+                  <td style="text-align: right;">R$ ${((s.valorUnitario || 0).toFixed(2)).replace('.', ',')}</td>
+                  <td style="text-align: right;">R$ ${(((s.valorUnitario || 0) * (s.quantidade || 1)).toFixed(2)).replace('.', ',')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : ''}
+
+        ${pedido.materiais && pedido.materiais.length > 0 ? `
+          <h4 style="margin-top: 15px; color: #333;">📦 Materiais</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th style="text-align: center;">Qtd</th>
+                <th style="text-align: right;">Valor Unit.</th>
+                <th style="text-align: right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pedido.materiais.map(m => `
+                <tr>
+                  <td>${m.nome || m.descricao}</td>
+                  <td style="text-align: center;">${m.quantidade || 1} ${m.unidadeMedida || ''}</td>
+                  <td style="text-align: right;">R$ ${((m.valorUnitario || 0).toFixed(2)).replace('.', ',')}</td>
+                  <td style="text-align: right;">R$ ${(((m.valorUnitario || 0) * (m.quantidade || 1)).toFixed(2)).replace('.', ',')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : ''}
+
+        <div class="totalizador">
+          <div class="totalizador-linha">
+            <span>Subtotal:</span>
+            <strong>R$ ${subtotal.toFixed(2).replace('.', ',')}</strong>
+          </div>
+          ${desconto > 0 ? `
+            <div class="totalizador-linha">
+              <span>Desconto:</span>
+              <strong>- R$ ${desconto.toFixed(2).replace('.', ',')}</strong>
+            </div>
+          ` : ''}
+          <div class="totalizador-linha">
+            <span>Total do Pedido:</span>
+            <strong>R$ ${valorTotal.toFixed(2).replace('.', ',')}</strong>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('')}
+
+  <div class="totalizador" style="margin-top: 30px; background: #6c63ff20; border: 2px solid #6c63ff;">
+    <div class="totalizador-linha valor-final">
+      <span>VALOR TOTAL GERAL:</span>
+      <strong>R$ ${totalGeral.toFixed(2).replace('.', ',')}</strong>
     </div>
   </div>
 
@@ -563,49 +808,234 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {}, PAG = {} }) {
             {/* Lista de pedidos */}
             <div className="lista-pedidos">
               <h3>📋 Pedidos Realizados</h3>
+              
+              {/* Seleção rápida de pedido */}
+              {pedidosCliente.length > 1 && (
+                <div style={{
+                  marginBottom: '20px',
+                  padding: '12px',
+                  background: 'var(--bg3)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border)'
+                }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    marginBottom: '8px',
+                    color: 'var(--text)'
+                  }}>
+                    🔍 Ir para pedido:
+                  </label>
+                  <select
+                    onChange={(e) => {
+                      const pedidoId = e.target.value;
+                      if (pedidoId) {
+                        const elemento = document.getElementById(`pedido-faturamento-${pedidoId}`);
+                        if (elemento) {
+                          elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          // Pisca o elemento
+                          elemento.style.transform = 'scale(1.02)';
+                          setTimeout(() => {
+                            elemento.style.transform = 'scale(1)';
+                          }, 300);
+                        }
+                      }
+                    }}
+                    defaultValue={pedidoInicial?.id || ''}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      background: 'var(--bg)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '6px',
+                      color: 'var(--text)',
+                      fontSize: '14px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="">Selecione um pedido...</option>
+                    {pedidosCliente.map(pedido => (
+                      <option key={pedido.id} value={pedido.id}>
+                        Pedido Nº {pedido.numero} - {pedido.referencia || 'Sem referência'} - {formatarValor(calcularValorPedido(pedido))}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
               {pedidosCliente.length === 0 ? (
                 <p className="sem-pedidos">Nenhum pedido encontrado para este cliente.</p>
               ) : (
-                <div className="pedidos-grid">
-                  {pedidosCliente.map(pedido => {
-                    const valorPedido = calcularValorPedido(pedido);
-                    const totalPago = getTotalPagoPedido(pedido, PAG);
-                    const status = statusConfig[pedido.status] || { label: 'Desconhecido', cor: '#999', icon: '?' };
+                <>
+                  <div className="pedidos-grid">
+                    {pedidosCliente.map(pedido => {
+                      const valorPedido = calcularValorPedido(pedido);
+                      const totalPago = getTotalPagoPedido(pedido, PAG);
+                      const status = statusConfig[pedido.status] || { label: 'Desconhecido', cor: '#999', icon: '?' };
+                      const isPedidoAtual = pedidoInicial && pedido.id === pedidoInicial.id;
+                      const isSelected = pedidosSelecionados.find(p => p.id === pedido.id);
 
-                    return (
-                      <div key={pedido.id} className="card-pedido">
-                        <div className="pedido-numero">Pedido Nº {pedido.numero}</div>
-                        <div className="pedido-status" style={{ background: status.cor }}>
-                          {status.icon} {status.label}
-                        </div>
-                        <div className="pedido-info">
-                          <div className="info-linha">
-                            <span className="label">Data:</span>
-                            <span>{pedido.criadoEm}</span>
+                      return (
+                        <div 
+                          key={pedido.id}
+                          id={`pedido-faturamento-${pedido.id}`}
+                          className="card-pedido"
+                          onClick={() => handleTogglePedido(pedido)}
+                          style={{
+                            border: isSelected ? '2px solid var(--accent)' : '1px solid var(--border)',
+                            background: isSelected ? 'var(--accent)08' : 'var(--bg3)',
+                            position: 'relative',
+                            transition: 'all 0.3s ease',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {/* Checkbox */}
+                          <div style={{
+                            position: 'absolute',
+                            top: '12px',
+                            left: '12px',
+                            width: '24px',
+                            height: '24px',
+                            borderRadius: '6px',
+                            border: isSelected ? '2px solid var(--accent)' : '2px solid var(--border)',
+                            background: isSelected ? 'var(--accent)' : 'transparent',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '14px',
+                            color: '#fff',
+                            fontWeight: 'bold',
+                            transition: 'all 0.2s ease',
+                            zIndex: 2
+                          }}>
+                            {isSelected && '✓'}
                           </div>
-                          <div className="info-linha">
-                            <span className="label">Referência:</span>
-                            <span>{pedido.referencia || '-'}</span>
-                          </div>
-                          <div className="info-linha destaque">
-                            <span className="label">Valor:</span>
-                            <span>{formatarValor(valorPedido)}</span>
-                          </div>
-                          <div className="info-linha">
-                            <span className="label">Pago:</span>
-                            <span className="valor-pago">{formatarValor(totalPago)}</span>
-                          </div>
-                          {valorPedido - totalPago > 0 && (
-                            <div className="info-linha destaque">
-                              <span className="label">Pendente:</span>
-                              <span className="valor-pendente">{formatarValor(valorPedido - totalPago)}</span>
+
+                          {isPedidoAtual && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              background: 'var(--accent)',
+                              color: '#fff',
+                              padding: '4px 10px',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              zIndex: 1
+                            }}>
+                              ✓ Pedido Atual
                             </div>
                           )}
+                          <div className="pedido-numero" style={{ marginLeft: '36px' }}>Pedido Nº {pedido.numero}</div>
+                          <div className="pedido-status" style={{ background: status.cor, marginLeft: '36px' }}>
+                            {status.icon} {status.label}
+                          </div>
+                          <div className="pedido-info" style={{ marginLeft: '36px' }}>
+                            <div className="info-linha">
+                              <span className="label">Data:</span>
+                              <span>{pedido.criadoEm}</span>
+                            </div>
+                            <div className="info-linha">
+                              <span className="label">Referência:</span>
+                              <span>{pedido.referencia || '-'}</span>
+                            </div>
+                            <div className="info-linha destaque">
+                              <span className="label">Valor:</span>
+                              <span>{formatarValor(valorPedido)}</span>
+                            </div>
+                            <div className="info-linha">
+                              <span className="label">Pago:</span>
+                              <span className="valor-pago">{formatarValor(totalPago)}</span>
+                            </div>
+                            {valorPedido - totalPago > 0 && (
+                              <div className="info-linha destaque">
+                                <span className="label">Pendente:</span>
+                                <span className="valor-pendente">{formatarValor(valorPedido - totalPago)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Painel de Seleção - Faturamento */}
+                  {pedidosSelecionados.length > 0 && (
+                    <div style={{
+                      marginTop: '20px',
+                      padding: '16px',
+                      background: 'var(--accent)10',
+                      border: '2px solid var(--accent)',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '12px'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
+                      }}>
+                        <div style={{
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: 'var(--text)'
+                        }}>
+                          ✓ {pedidosSelecionados.length} pedido(s) selecionado(s)
+                        </div>
+                        <div style={{
+                          fontSize: '16px',
+                          fontWeight: '700',
+                          color: 'var(--accent)'
+                        }}>
+                          Total: {formatarValor(pedidosSelecionados.reduce((total, pedido) => 
+                            total + calcularValorPedido(pedido), 0
+                          ))}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+
+                      <div style={{
+                        display: 'flex',
+                        gap: '10px'
+                      }}>
+                        <button
+                          className="btn-pdf"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGerarPDFMultiplos();
+                          }}
+                          disabled={pedidosSelecionados.length === 0}
+                          style={{
+                            padding: '10px 16px',
+                            fontSize: '14px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          📄 Gerar PDF ({pedidosSelecionados.length})
+                        </button>
+                        <button
+                          className="btn-whatsapp"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCompartilharWhatsappMultiplos();
+                          }}
+                          disabled={pedidosSelecionados.length === 0}
+                          style={{
+                            padding: '10px 16px',
+                            fontSize: '14px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          💬 WhatsApp ({pedidosSelecionados.length})
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -614,53 +1044,223 @@ function RelatorioModal({ isOpen, onClose, cliente, ORC = {}, PAG = {} }) {
         {/* Conteúdo - Orçamentos */}
         {abaAtiva === 'orcamento' && (
           <div className="aba-conteudo">
-            <h3>📄 Selecione um Pedido para Gerar Orçamento</h3>
+            <h3>📄 Selecione Pedidos para Gerar Orçamento</h3>
+            
+            {/* Seleção rápida de pedido */}
+            {pedidosCliente.length > 1 && (
+              <div style={{
+                marginBottom: '20px',
+                padding: '12px',
+                background: 'var(--bg3)',
+                borderRadius: '8px',
+                border: '1px solid var(--border)'
+              }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  marginBottom: '8px',
+                  color: 'var(--text)'
+                }}>
+                  🔍 Ir para pedido:
+                </label>
+                <select
+                  onChange={(e) => {
+                    const pedidoId = e.target.value;
+                    if (pedidoId) {
+                      const elemento = document.getElementById(`pedido-${pedidoId}`);
+                      if (elemento) {
+                        elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // Pisca o elemento
+                        elemento.style.transform = 'scale(1.02)';
+                        setTimeout(() => {
+                          elemento.style.transform = 'scale(1)';
+                        }, 300);
+                      }
+                    }
+                  }}
+                  defaultValue={pedidoInicial?.id || ''}
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    color: 'var(--text)',
+                    fontSize: '14px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">Selecione um pedido...</option>
+                  {pedidosCliente.map(pedido => (
+                    <option key={pedido.id} value={pedido.id}>
+                      Pedido Nº {pedido.numero} - {pedido.referencia || 'Sem referência'} - {formatarValor(calcularValorPedido(pedido))}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            
             {pedidosCliente.length === 0 ? (
               <p className="sem-pedidos">Nenhum pedido encontrado para este cliente.</p>
             ) : (
-              <div className="lista-orcamentos">
-                {pedidosCliente.map(pedido => {
-                  const valorPedido = calcularValorPedido(pedido);
-                  const status = statusConfig[pedido.status] || { label: 'Desconhecido', cor: '#999', icon: '?' };
+              <>
+                <div className="lista-orcamentos">
+                  {pedidosCliente.map(pedido => {
+                    const valorPedido = calcularValorPedido(pedido);
+                    const status = statusConfig[pedido.status] || { label: 'Desconhecido', cor: '#999', icon: '?' };
+                    const isPedidoAtual = pedidoInicial && pedido.id === pedidoInicial.id;
+                    const isSelected = pedidosSelecionados.find(p => p.id === pedido.id);
 
-                  return (
-                    <div key={pedido.id} className="item-orcamento">
-                      <div className="orcamento-header">
-                        <div className="orcamento-info">
-                          <div className="orcamento-numero">Pedido Nº {pedido.numero}</div>
-                          <div className="orcamento-status" style={{ background: status.cor }}>
-                            {status.icon} {status.label}
+                    return (
+                      <div 
+                        key={pedido.id}
+                        id={`pedido-${pedido.id}`}
+                        className="item-orcamento"
+                        onClick={() => handleTogglePedido(pedido)}
+                        style={{
+                          border: isSelected ? '2px solid var(--accent)' : '1px solid var(--border)',
+                          background: isSelected ? 'var(--accent)08' : 'var(--bg3)',
+                          position: 'relative',
+                          transition: 'all 0.3s ease',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {/* Checkbox */}
+                        <div style={{
+                          position: 'absolute',
+                          top: '12px',
+                          left: '12px',
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '6px',
+                          border: isSelected ? '2px solid var(--accent)' : '2px solid var(--border)',
+                          background: isSelected ? 'var(--accent)' : 'transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px',
+                          color: '#fff',
+                          fontWeight: 'bold',
+                          transition: 'all 0.2s ease',
+                          zIndex: 2
+                        }}>
+                          {isSelected && '✓'}
+                        </div>
+
+                        {isPedidoAtual && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '8px',
+                            right: '8px',
+                            background: 'var(--accent)',
+                            color: '#fff',
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            zIndex: 1
+                          }}>
+                            ✓ Pedido Atual
+                          </div>
+                        )}
+                        <div className="orcamento-header" style={{ marginLeft: '36px' }}>
+                          <div className="orcamento-info">
+                            <div className="orcamento-numero">Pedido Nº {pedido.numero}</div>
+                            <div className="orcamento-status" style={{ background: status.cor }}>
+                              {status.icon} {status.label}
+                            </div>
+                          </div>
+                          <div className="orcamento-valor">
+                            {formatarValor(valorPedido)}
                           </div>
                         </div>
-                        <div className="orcamento-valor">
-                          {formatarValor(valorPedido)}
+
+                        <div className="orcamento-detalhes" style={{ marginLeft: '36px' }}>
+                          <span>📅 {pedido.criadoEm}</span>
+                          <span>📍 {pedido.referencia || 'Sem referência'}</span>
+                          <span>📦 {(pedido.servicos?.length || 0) + (pedido.materiais?.length || 0)} itens</span>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
 
-                      <div className="orcamento-detalhes">
-                        <span>📅 {pedido.criadoEm}</span>
-                        <span>📍 {pedido.referencia || 'Sem referência'}</span>
-                        <span>📦 {(pedido.servicos?.length || 0) + (pedido.materiais?.length || 0)} itens</span>
+                {/* Painel de Seleção */}
+                {pedidosSelecionados.length > 0 && (
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '16px',
+                    background: 'var(--accent)10',
+                    border: '2px solid var(--accent)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '12px'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}>
+                      <div style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: 'var(--text)'
+                      }}>
+                        ✓ {pedidosSelecionados.length} pedido(s) selecionado(s)
                       </div>
-
-                      <div className="orcamento-acoes">
-                        <button
-                          className="btn-pdf"
-                          onClick={() => handleGerarPDF(pedido)}
-                        >
-                          📄 Gerar PDF
-                        </button>
-                        <button
-                          className="btn-whatsapp"
-                          onClick={() => handleCompartilharWhatsapp(pedido)}
-                        >
-                          💬 Enviar WhatsApp
-                        </button>
+                      <div style={{
+                        fontSize: '16px',
+                        fontWeight: '700',
+                        color: 'var(--accent)'
+                      }}>
+                        Total: {formatarValor(pedidosSelecionados.reduce((total, pedido) => 
+                          total + calcularValorPedido(pedido), 0
+                        ))}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    <div style={{
+                      display: 'flex',
+                      gap: '10px'
+                    }}>
+                      <button
+                        className="btn-pdf"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleGerarPDFMultiplos();
+                        }}
+                        disabled={pedidosSelecionados.length === 0}
+                        style={{
+                          padding: '10px 16px',
+                          fontSize: '14px',
+                          fontWeight: '600'
+                        }}
+                      >
+                        📄 Gerar PDF ({pedidosSelecionados.length})
+                      </button>
+                      <button
+                        className="btn-whatsapp"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCompartilharWhatsappMultiplos();
+                        }}
+                        disabled={pedidosSelecionados.length === 0}
+                        style={{
+                          padding: '10px 16px',
+                          fontSize: '14px',
+                          fontWeight: '600'
+                        }}
+                      >
+                        💬 WhatsApp ({pedidosSelecionados.length})
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
